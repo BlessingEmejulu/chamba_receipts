@@ -1,0 +1,8 @@
+{
+  "name": "Chamba Receipts",
+  "slug": "chamba-receipts",
+  "description": "Turn every payment into proof of income. Digital receipts & income tracking for freelancers and independent workers.",
+  "category": "finance",
+  "icon": "/icon.svg",
+  "url": "https://chamba-receipts.vercel.app"
+}

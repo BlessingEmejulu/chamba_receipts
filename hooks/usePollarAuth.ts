@@ -35,18 +35,51 @@ const SETTLED_STEPS: AuthState["step"][] = [
   "wallet_not_installed",
 ];
 
+const DEMO_STORAGE_KEY = "chamba_demo_user";
+
+const DEFAULT_DEMO_USER: PollarUser = {
+  address: "GDEMO77K65A7KEMEJULUBL3SSINGCHAMBA2026STELLARUSDC",
+  displayName: "Blessing Emejulu",
+  email: "blessing@chamba.design",
+  profile: {
+    first_name: "Blessing",
+    last_name: "Emejulu",
+    mail: "blessing@chamba.design",
+    avatar: null,
+    providers: [],
+  } as unknown as PollarUserProfile,
+  wallet: {
+    address: "GDEMO77K65A7KEMEJULUBL3SSINGCHAMBA2026STELLARUSDC",
+    custody: "smart",
+    provider: "passkey",
+  } as WalletInfo,
+};
+
 export function usePollarAuth() {
   const {
-    isAuthenticated,
+    isAuthenticated: isPollarAuthenticated,
     verified,
     wallet,
-    logout,
+    logout: pollarLogout,
     openLoginModal,
     getClient,
   } = usePollar();
 
   const [authStep, setAuthStep] = useState<AuthState["step"]>("idle");
+  const [demoUser, setDemoUser] = useState<PollarUser | null>(null);
   const [, startTransition] = useTransition();
+
+  // Load demo user from localStorage if present
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DEMO_STORAGE_KEY);
+      if (stored) {
+        setDemoUser(JSON.parse(stored));
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -72,8 +105,8 @@ export function usePollarAuth() {
   const displayName = getProfileDisplayName(profile);
   const email = getProfileEmail(profile);
 
-  const user: PollarUser | null =
-    isAuthenticated && wallet
+  const realPollarUser: PollarUser | null =
+    isPollarAuthenticated && wallet
       ? {
           address: wallet.address,
           profile,
@@ -83,13 +116,53 @@ export function usePollarAuth() {
         }
       : null;
 
+  const activeUser = realPollarUser || demoUser;
+  const isAuthenticated = Boolean(isPollarAuthenticated || demoUser);
+
+  const loginWithDemo = (customName = "Blessing Emejulu", customAddress?: string) => {
+    const userToSet: PollarUser = {
+      address: customAddress?.trim() || DEFAULT_DEMO_USER.address,
+      displayName: customName,
+      email: `${customName.toLowerCase().replace(/\s+/g, ".")}@chamba.design`,
+      profile: {
+        first_name: customName.split(" ")[0] || "Worker",
+        last_name: customName.split(" ").slice(1).join(" ") || "",
+        mail: `${customName.toLowerCase().replace(/\s+/g, ".")}@chamba.design`,
+        avatar: null,
+        providers: [],
+      } as unknown as PollarUserProfile,
+      wallet: {
+        address: customAddress?.trim() || DEFAULT_DEMO_USER.address,
+        custody: "smart",
+        provider: "passkey",
+      } as WalletInfo,
+    };
+    try {
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(userToSet));
+    } catch {}
+    setDemoUser(userToSet);
+  };
+
+
+  const logout = () => {
+    try {
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+    } catch {}
+    setDemoUser(null);
+    try {
+      pollarLogout();
+    } catch {}
+  };
+
   return {
-    user,
+    user: activeUser,
     isAuthenticated,
+    isDemoMode: Boolean(!realPollarUser && demoUser),
     isLoading: !SETTLED_STEPS.includes(authStep),
     login: openLoginModal,
+    loginWithDemo,
     logout,
-    verified,
-    wallet,
+    verified: Boolean(verified || demoUser),
+    wallet: activeUser?.wallet || null,
   };
 }

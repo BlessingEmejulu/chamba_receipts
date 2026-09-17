@@ -173,6 +173,55 @@ export default function PaymentCheckoutPage({
     }
   };
 
+  const handleSimulatePayment = () => {
+    if (!request) return;
+    setPaying(true);
+    setErrorMessage(null);
+    setStatusMessage("Confirming simulated payment on Stellar Testnet...");
+
+    setTimeout(() => {
+      // 64-char simulated hex hash
+      const chars = "abcdef0123456789";
+      let mockTx = "";
+      for (let i = 0; i < 64; i++) {
+        mockTx += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      const receiptId = generateId("CR");
+      const confirmedRecord: PaymentRecord = {
+        id: receiptId,
+        paymentRequestId: request.id,
+        transactionId: mockTx,
+        workerAddress: request.workerAddress,
+        workerName: request.workerName,
+        payerAddress: "GCUSTOMER77DEMO99TESTNETCHAMBAPAYER2026STELLAR",
+        payerName: request.customerName || "Verified Customer (Demo)",
+        description: request.description,
+        amount: request.amount,
+        currency: request.currency,
+        status: "successful",
+        memo: request.memo,
+        createdAt: new Date().toISOString(),
+        paidAt: new Date().toISOString(),
+      };
+
+      savePaymentRecord(confirmedRecord);
+      updatePaymentRequestStatus(request.id, "successful", receiptId);
+      setConfirmedReceiptId(receiptId);
+      setPaying(false);
+      setStatusMessage(null);
+
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      } catch {}
+    }, 1200);
+  };
+
+
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-12">
@@ -348,7 +397,22 @@ export default function PaymentCheckoutPage({
             </button>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-2">
+          {/* Fallback Simulation Checkout */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleSimulatePayment}
+              disabled={paying}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors active:scale-[0.99]"
+            >
+              <span>⚡ Simulate Instant Payment (Demo / Fast Review)</span>
+            </button>
+            <p className="text-[10px] text-center text-slate-400 mt-1">
+              Bypasses external wallet popups to test receipt issuance & proof-of-income ledger.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
             <span>Non-custodial payment verified on Stellar Ledger</span>
           </div>

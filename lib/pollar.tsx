@@ -27,6 +27,28 @@ export function getPollarClient(key: string): PollarClient {
   return globalPollar.__pollarClient;
 }
 
+import type { PollarConfig } from "@pollar/react";
+
+const appConfig: PollarConfig = {
+  application: {
+    name: "Chamba Receipts",
+    network: publishableKey.startsWith("pub_mainnet_") ? "mainnet" : "testnet",
+    chains: ["STELLAR"],
+  },
+  styles: {
+    theme: "light",
+    accentColor: "#006241",
+    modalTitle: "Chamba Receipts",
+    emailEnabled: true,
+    embeddedWallets: true,
+    smartWallet: true,
+    providers: {
+      google: true,
+      github: true,
+    },
+  },
+};
+
 /**
  * Single place where Pollar is initialized. Mounted once in app/layout.tsx;
  * everywhere else, consume Pollar via usePollar() from @pollar/react or the
@@ -35,5 +57,10 @@ export function getPollarClient(key: string): PollarClient {
 export function PollarAppProvider({ children }: { children: React.ReactNode }) {
   const client = React.useMemo(() => getPollarClient(publishableKey), []);
 
-  return <PollarProvider client={client}>{children}</PollarProvider>;
+  return (
+    <PollarProvider client={client} appConfig={appConfig}>
+      {children}
+    </PollarProvider>
+  );
 }
+

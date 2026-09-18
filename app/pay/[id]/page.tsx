@@ -22,6 +22,7 @@ import {
   verifyPaymentOnHorizon,
   getExplorerUrl,
   looksLikeAddress,
+  fundWithFriendbot,
 } from "@/lib/stellar";
 import {
   Receipt,
@@ -46,9 +47,25 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<PaymentRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [fundingMessage, setFundingMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmedReceiptId, setConfirmedReceiptId] = useState<string | null>(null);
+
+  const handleFundFriendbot = async () => {
+    if (!user?.address) return;
+    setFunding(true);
+    setFundingMessage("Requesting 10,000 testnet XLM from Stellar Friendbot...");
+    const res = await fundWithFriendbot(user.address);
+    setFunding(false);
+    if (res.ok) {
+      setFundingMessage("✓ Wallet funded with 10,000 testnet XLM on Stellar!");
+      setErrorMessage(null);
+    } else {
+      setFundingMessage(`Friendbot notice: ${res.message}`);
+    }
+  };
 
   useEffect(() => {
     let r = getPaymentRequest(requestId);
@@ -344,6 +361,41 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
           <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50/70 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Testnet Faucet Quick Action */}
+        {isAuthenticated && user?.address && (
+          <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <span className="font-bold text-slate-800 block">Need Testnet Funds?</span>
+                <span className="text-[11px] text-slate-500">Fund your wallet with 10,000 free testnet XLM</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleFundFriendbot}
+                disabled={funding}
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs hover:bg-blue-50 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {funding ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Funding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Get 10,000 XLM</span>
+                  </>
+                )}
+              </button>
+            </div>
+            {fundingMessage && (
+              <div className="mt-2.5 rounded-lg bg-white p-2.5 text-[11px] font-medium text-slate-800 border border-blue-200">
+                {fundingMessage}
+              </div>
+            )}
           </div>
         )}
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { usePollarAuth } from "@/hooks/usePollarAuth";
 import { useBalance } from "@/hooks/useBalance";
-import { formatAmount, shortAddress } from "@/lib/stellar";
+import { formatAmount, shortAddress, fundWithFriendbot } from "@/lib/stellar";
 import {
   User,
   Wallet,
@@ -17,6 +17,8 @@ import {
   RefreshCw,
   QrCode,
   ArrowRight,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -24,6 +26,22 @@ export default function ProfilePage() {
   const { balance, currency, balances, refresh, isLoading: balanceLoading } = useBalance();
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [fundingMessage, setFundingMessage] = useState<string | null>(null);
+
+  const handleFundFriendbot = async () => {
+    if (!user?.address) return;
+    setFunding(true);
+    setFundingMessage("Requesting 10,000 testnet XLM from Stellar Friendbot...");
+    const res = await fundWithFriendbot(user.address);
+    setFunding(false);
+    if (res.ok) {
+      setFundingMessage("✓ " + res.message);
+      setTimeout(() => refresh(), 1500);
+    } else {
+      setFundingMessage(`Friendbot notice: ${res.message}`);
+    }
+  };
 
   const handleCopyAddress = async () => {
     if (!user?.address) return;
@@ -176,6 +194,45 @@ export default function ProfilePage() {
                   </div>
                 </div>
               ))}
+          </div>
+        </div>
+
+        {/* Testnet Friendbot Faucet */}
+        <div className="border-t border-slate-100 pt-6">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                  <span>Stellar Testnet Friendbot Faucet</span>
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Need testnet funds? Request 10,000 free testnet XLM directly from the official Stellar network faucet.
+                </p>
+              </div>
+              <button
+                onClick={handleFundFriendbot}
+                disabled={funding}
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {funding ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Funding Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Fund with 10,000 XLM</span>
+                  </>
+                )}
+              </button>
+            </div>
+            {fundingMessage && (
+              <div className="mt-3 rounded-lg bg-white p-3 text-xs font-medium text-slate-800 border border-blue-200">
+                {fundingMessage}
+              </div>
+            )}
           </div>
         </div>
 

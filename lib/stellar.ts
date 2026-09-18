@@ -262,3 +262,26 @@ export async function fetchPaymentFromHorizon(hash: string): Promise<HorizonPaym
     return null;
   }
 }
+
+/**
+ * Funds any Stellar Testnet address with 10,000 free testnet XLM via official Stellar Friendbot.
+ */
+export async function fundWithFriendbot(address: string): Promise<{ ok: boolean; message: string }> {
+  const clean = address.trim();
+  if (!looksLikeAddress(clean)) {
+    return { ok: false, message: "Invalid Stellar public key format." };
+  }
+
+  try {
+    const res = await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(clean)}`);
+    const data = await res.json();
+    if (res.ok) {
+      return { ok: true, message: "Account successfully created and funded with 10,000 testnet XLM!" };
+    }
+    return { ok: false, message: data.detail || data.title || "Friendbot funding failed." };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, message: `Could not reach Stellar Friendbot: ${msg}` };
+  }
+}
+

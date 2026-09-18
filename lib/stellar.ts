@@ -203,3 +203,62 @@ export async function verifyPaymentOnHorizon(opts: {
     return { ok: false, error: `Error verifying transaction on Horizon: ${message}` };
   }
 }
+
+export interface HorizonPaymentDetails {
+  txHash: string;
+  memo: string;
+  sourceAccount: string;
+  workerAddress: string;
+  amount: string;
+  currency: "USDC" | "XLM";
+  assetIssuer?: string;
+  createdAt: string;
+  successful: boolean;
+}
+
+/**
+ * Reconstructs payment receipt details directly from the Stellar Horizon blockchain.
+ * Enables third-parties (e.g. loan officers, clients) to verify receipts statelessly.
+ */
+export async function fetchPaymentFromHorizon(hash: string): Promise<HorizonPaymentDetails | null> {
+  const cleanHash = hash.trim().toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(cleanHash)) return null;
+
+  const horizon = getHorizonUrl();
+  try {
+    const txRes = await fetch(`${horizon}/transactions/${cleanHash}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!txRes.ok) return null;
+    const tx: HorizonTx & { created_at?: string } = await txRes.json();
+    if (!tx.successful) return null;
+
+    const opsRes = await fetch(`${horizon}/transactions/${cleanHash}/operations?limit=50`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!opsRes.ok) return null;
+    const opsData = await opsRes.json();
+    const records: HorizonOp[] = opsData?._embedded?.records ?? [];
+
+    const paymentOp = records.find((op) => op.type === "payment");
+    if (!paymentOp || !paymentOp.to || !paymentOp.amount) return null;
+
+    const currency: "USDC" | "XLM" = paymentOp.asset_code === "USDC" ? "USDC" : "XLM";
+
+    return {
+      txHash: cleanHash,
+      memo: tx.memo || `CR-${cleanHash.slice(0, 6).toUpperCase()}`,
+      sourceAccount: paymentOp.from || tx.source_account || "",
+      workerAddress: paymentOp.to,
+      amount: paymentOp.amount,
+      currency,
+      assetIssuer: paymentOp.asset_issuer,
+      createdAt: tx.created_at || new Date().toISOString(),
+      successful: true,
+    };
+  } catch {
+    return null;
+  }
+}

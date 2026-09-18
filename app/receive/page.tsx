@@ -82,9 +82,21 @@ export default function ReceivePaymentPage() {
     setIsSubmitting(false);
   };
 
-  const paymentPageUrl = createdRequest
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/pay/${createdRequest.id}`
-    : "";
+  const buildPaymentPageUrl = (req: PaymentRequest): string => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const params = new URLSearchParams({
+      to: req.workerAddress,
+      amt: req.amount,
+      cur: req.currency,
+      memo: req.memo,
+      desc: req.description,
+    });
+    if (req.workerName) params.set("worker", req.workerName);
+    if (req.customerName) params.set("customer", req.customerName);
+    return `${origin}/pay/${req.id}?${params.toString()}`;
+  };
+
+  const paymentPageUrl = createdRequest ? buildPaymentPageUrl(createdRequest) : "";
 
   const handleCopyLink = async () => {
     if (!paymentPageUrl) return;
@@ -308,7 +320,7 @@ export default function ReceivePaymentPage() {
 
               <div className="pt-2">
                 <Link
-                  href={`/pay/${createdRequest.id}`}
+                  href={paymentPageUrl}
                   target="_blank"
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100/70 transition-all"
                 >

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import Link from "next/link";
-import { getPaymentRecord, PaymentRecord } from "@/lib/storage";
-import { formatAmount, shortAddress, getExplorerUrl } from "@/lib/stellar";
+import { useSearchParams } from "next/navigation";
+import { getPaymentRecord, savePaymentRecord, PaymentRecord } from "@/lib/storage";
+import { formatAmount, shortAddress, getExplorerUrl, fetchPaymentFromHorizon } from "@/lib/stellar";
 import {
   ArrowLeft,
   FileText,
@@ -20,23 +21,48 @@ import {
   Loader2,
 } from "lucide-react";
 
-export default function TransactionDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const resolvedParams = use(params);
-  const paymentId = resolvedParams.id;
+function TransactionDetailContent({ paymentId }: { paymentId: string }) {
+  const searchParams = useSearchParams();
+  const txParam = searchParams.get("tx");
 
   const [record, setRecord] = useState<PaymentRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedHash, setCopiedHash] = useState(false);
+  const [sourceOnChain, setSourceOnChain] = useState(false);
 
   useEffect(() => {
-    const r = getPaymentRecord(paymentId);
-    setRecord(r);
-    setLoading(false);
-  }, [paymentId]);
+    async function loadTx() {
+      let r = getPaymentRecord(paymentId);
+      const targetHash = txParam || (/^[a-f0-9]{64}$/i.test(paymentId) ? paymentId : null);
+
+      if (!r && targetHash) {
+        const onChain = await fetchPaymentFromHorizon(targetHash);
+        if (onChain) {
+          r = {
+            id: onChain.memo || paymentId,
+            paymentRequestId: `REQ-${targetHash.slice(0, 6).toUpperCase()}`,
+            transactionId: onChain.txHash,
+            workerAddress: onChain.workerAddress,
+            payerAddress: onChain.sourceAccount,
+            description: "Verified Stellar Payment",
+            amount: onChain.amount,
+            currency: onChain.currency,
+            status: "successful",
+            memo: onChain.memo,
+            createdAt: onChain.createdAt,
+            paidAt: onChain.createdAt,
+          };
+          savePaymentRecord(r);
+          setSourceOnChain(true);
+        }
+      }
+
+      setRecord(r);
+      setLoading(false);
+    }
+
+    loadTx();
+  }, [paymentId, txParam]);
 
   if (loading) {
     return (
@@ -222,5 +248,26 @@ export default function TransactionDetailPage({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TransactionDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = use(params);
+  const paymentId = resolvedParams.id;
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        </div>
+      }
+    >
+      <TransactionDetailContent paymentId={paymentId} />
+    </Suspense>
   );
 }

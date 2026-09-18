@@ -150,13 +150,23 @@ export interface DashboardStats {
   recentPayments: PaymentRecord[];
 }
 
+function parseCents(amountStr: string | number): number {
+  const n = parseFloat(String(amountStr));
+  if (isNaN(n)) return 0;
+  return Math.round(n * 100);
+}
+
+function centsToDecimal(cents: number): number {
+  return Math.round(cents) / 100;
+}
+
 export function getDashboardStats(workerAddress?: string): DashboardStats {
   const records = listPaymentRecords(workerAddress).filter((r) => r.status === "successful");
 
-  let totalUsdc = 0;
-  let totalXlm = 0;
-  let thisMonthUsdc = 0;
-  let thisMonthXlm = 0;
+  let totalUsdcCents = 0;
+  let totalXlmCents = 0;
+  let thisMonthUsdcCents = 0;
+  let thisMonthXlmCents = 0;
   let usdcCount = 0;
 
   const now = new Date();
@@ -164,28 +174,29 @@ export function getDashboardStats(workerAddress?: string): DashboardStats {
   const currentMonth = now.getMonth();
 
   for (const r of records) {
-    const amountNum = parseFloat(r.amount) || 0;
+    const cents = parseCents(r.amount);
     const date = new Date(r.paidAt || r.createdAt);
     const isThisMonth = date.getFullYear() === currentYear && date.getMonth() === currentMonth;
 
     if (r.currency === "XLM") {
-      totalXlm += amountNum;
-      if (isThisMonth) thisMonthXlm += amountNum;
+      totalXlmCents += cents;
+      if (isThisMonth) thisMonthXlmCents += cents;
     } else {
-      totalUsdc += amountNum;
+      totalUsdcCents += cents;
       usdcCount++;
-      if (isThisMonth) thisMonthUsdc += amountNum;
+      if (isThisMonth) thisMonthUsdcCents += cents;
     }
   }
 
-  const averagePaymentUsdc = usdcCount > 0 ? totalUsdc / usdcCount : 0;
+  const totalUsdc = centsToDecimal(totalUsdcCents);
+  const averagePaymentUsdc = usdcCount > 0 ? centsToDecimal(totalUsdcCents / usdcCount) : 0;
 
   return {
     totalUsdc,
-    totalXlm,
+    totalXlm: centsToDecimal(totalXlmCents),
     paymentCount: records.length,
-    thisMonthUsdc,
-    thisMonthXlm,
+    thisMonthUsdc: centsToDecimal(thisMonthUsdcCents),
+    thisMonthXlm: centsToDecimal(thisMonthXlmCents),
     averagePaymentUsdc,
     recentPayments: records.slice(0, 5),
   };
@@ -201,7 +212,7 @@ export interface MonthlyBreakdownItem {
 
 export function getMonthlyBreakdown(workerAddress?: string): MonthlyBreakdownItem[] {
   const records = listPaymentRecords(workerAddress).filter((r) => r.status === "successful");
-  const monthMap: Record<string, MonthlyBreakdownItem> = {};
+  const monthMap: Record<string, { count: number; usdcCents: number; xlmCents: number; monthName: string }> = {};
 
   for (const r of records) {
     const d = new Date(r.paidAt || r.createdAt);
@@ -210,22 +221,71 @@ export function getMonthlyBreakdown(workerAddress?: string): MonthlyBreakdownIte
 
     if (!monthMap[monthKey]) {
       monthMap[monthKey] = {
-        monthKey,
         monthName,
         count: 0,
-        totalUsdc: 0,
-        totalXlm: 0,
+        usdcCents: 0,
+        xlmCents: 0,
       };
     }
 
-    const amt = parseFloat(r.amount) || 0;
+    const cents = parseCents(r.amount);
     monthMap[monthKey].count += 1;
     if (r.currency === "XLM") {
-      monthMap[monthKey].totalXlm += amt;
+      monthMap[monthKey].xlmCents += cents;
     } else {
-      monthMap[monthKey].totalUsdc += amt;
+      monthMap[monthKey].usdcCents += cents;
     }
   }
 
-  return Object.values(monthMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  return Object.entries(monthMap)
+    .map(([monthKey, data]) => ({
+      monthKey,
+      monthName: data.monthName,
+      count: data.count,
+      totalUsdc: centsToDecimal(data.usdcCents),
+      totalXlm: centsToDecimal(data.xlmCents),
+    }))
+    .sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+}
+
+/**
+ * Generates an RFC 4180 compliant CSV string of payment records.
+ * Enables informal workers to export structured financial statements for tax and accounting.
+ */
+export function exportPaymentsToCsv(records: PaymentRecord[]): string {
+  const headers = [
+    "Receipt ID",
+    "Date Paid",
+    "Description",
+    "Amount",
+    "Currency",
+    "Payer Name",
+    "Payer Stellar Address",
+    "Worker Stellar Address",
+    "Stellar Memo",
+    "Transaction Hash",
+    "Status",
+  ];
+
+  const escapeCsv = (val: unknown) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const rows = records.map((r) => [
+    escapeCsv(r.id),
+    escapeCsv(r.paidAt || r.createdAt),
+    escapeCsv(r.description),
+    escapeCsv(r.amount),
+    escapeCsv(r.currency),
+    escapeCsv(r.payerName || "Customer"),
+    escapeCsv(r.payerAddress || ""),
+    escapeCsv(r.workerAddress),
+    escapeCsv(r.memo),
+    escapeCsv(r.transactionId),
+    escapeCsv(r.status),
+  ]);
+
+  return [headers.join(","), ...rows.map((row) => row.join(","))].join("\r\n");
 }

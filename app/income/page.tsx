@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePollarAuth } from "@/hooks/usePollarAuth";
-import { listPaymentRecords, PaymentRecord } from "@/lib/storage";
+import { listPaymentRecords, exportPaymentsToCsv, PaymentRecord } from "@/lib/storage";
 import { formatAmount, shortAddress, getExplorerUrl } from "@/lib/stellar";
 import {
   History,
@@ -27,6 +27,18 @@ export default function IncomeHistoryPage() {
   const loadRecords = () => {
     const list = listPaymentRecords(user?.address);
     setRecords(list);
+  };
+
+  const handleExportCsv = () => {
+    if (filteredRecords.length === 0) return;
+    const csvContent = exportPaymentsToCsv(filteredRecords);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chamba-income-statement-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -115,6 +127,15 @@ export default function IncomeHistoryPage() {
             <FileText className="h-4 w-4 text-slate-500" />
             <span>Monthly Report</span>
           </Link>
+          <button
+            onClick={handleExportCsv}
+            disabled={filteredRecords.length === 0}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
+            title="Download CSV Statement"
+          >
+            <Download className="h-4 w-4 text-slate-500" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 

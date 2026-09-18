@@ -76,6 +76,22 @@ export function ReceiptCard({ record, showActions = true }: ReceiptCardProps) {
         timeStyle: "short",
       });
 
+  const verificationHash = React.useMemo(() => {
+    const raw = `${record.id}:${record.transactionId}:${record.workerAddress}:${record.amount}:${record.currency}:${record.paidAt || record.createdAt}`;
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    const hex = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(12, "0").toUpperCase();
+    return `CHAMBA-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}`;
+  }, [record]);
+
   return (
     <div className="w-full max-w-lg mx-auto">
       {/* Receipt Paper Card */}
@@ -177,6 +193,13 @@ export function ReceiptCard({ record, showActions = true }: ReceiptCardProps) {
               </a>
             </div>
           )}
+
+          <div className="flex justify-between items-center gap-4 pt-1 border-t border-slate-100/80">
+            <span className="text-slate-500">Security Checksum</span>
+            <span className="font-mono text-[10px] sm:text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/60">
+              {verificationHash}
+            </span>
+          </div>
         </div>
 
         {/* QR Code and Verification Section */}

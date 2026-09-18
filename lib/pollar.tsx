@@ -18,36 +18,29 @@ const publishableKey =
 const globalPollar = globalThis as { __pollarClient?: PollarClient };
 
 export function getPollarClient(key: string): PollarClient {
-  globalPollar.__pollarClient ??= new PollarClient({
-    apiKey: key,
-    // Publishable keys are network-scoped (pub_testnet_… / pub_mainnet_…),
-    // so the key itself decides which Stellar network the app targets.
-    stellarNetwork: key.startsWith("pub_mainnet_") ? "mainnet" : "testnet",
-  });
+  if (typeof window === "undefined") {
+    // Suppress benign server-side constructor warning during Next.js SSR/prerender
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      if (typeof args[0] === "string" && args[0].includes("[PollarClient] constructor()")) return;
+      originalWarn(...args);
+    };
+    try {
+      globalPollar.__pollarClient ??= new PollarClient({
+        apiKey: key,
+        stellarNetwork: key.startsWith("pub_mainnet_") ? "mainnet" : "testnet",
+      });
+    } finally {
+      console.warn = originalWarn;
+    }
+  } else {
+    globalPollar.__pollarClient ??= new PollarClient({
+      apiKey: key,
+      stellarNetwork: key.startsWith("pub_mainnet_") ? "mainnet" : "testnet",
+    });
+  }
   return globalPollar.__pollarClient;
 }
-
-import type { PollarConfig } from "@pollar/react";
-
-const appConfig: PollarConfig = {
-  application: {
-    name: "Chamba Receipts",
-    network: publishableKey.startsWith("pub_mainnet_") ? "mainnet" : "testnet",
-    chains: ["STELLAR"],
-  },
-  styles: {
-    theme: "light",
-    accentColor: "#006241",
-    modalTitle: "Chamba Receipts",
-    emailEnabled: true,
-    embeddedWallets: true,
-    smartWallet: true,
-    providers: {
-      google: true,
-      github: true,
-    },
-  },
-};
 
 /**
  * Single place where Pollar is initialized. Mounted once in app/layout.tsx;
@@ -57,10 +50,5 @@ const appConfig: PollarConfig = {
 export function PollarAppProvider({ children }: { children: React.ReactNode }) {
   const client = React.useMemo(() => getPollarClient(publishableKey), []);
 
-  return (
-    <PollarProvider client={client} appConfig={appConfig}>
-      {children}
-    </PollarProvider>
-  );
+  return <PollarProvider client={client}>{children}</PollarProvider>;
 }
-

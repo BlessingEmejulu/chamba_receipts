@@ -15,10 +15,7 @@ function primaryRecord(
   );
 }
 
-import { usePollarAuth } from "./usePollarAuth";
-
 export function useBalance() {
-  const { isAuthenticated: isAnyAuth, isDemoMode } = usePollarAuth();
   const { isAuthenticated, verified, walletBalance, refreshWalletBalance } =
     usePollar();
   const retriedAfterVerify = useRef(false);
@@ -32,26 +29,6 @@ export function useBalance() {
       void refreshWalletBalance();
     }
   }, [isAuthenticated, verified, walletBalance.step, refreshWalletBalance]);
-
-  if (isDemoMode) {
-    return {
-      balance: "150.00",
-      currency: "USDC",
-      asset: {
-        code: "USDC",
-        balance: "150.00",
-        type: "credit_alphanum4",
-        enabledInApp: true,
-      } as unknown as WalletBalanceRecord,
-      balances: [
-        { code: "USDC", balance: "150.00", type: "credit_alphanum4", enabledInApp: true },
-        { code: "XLM", balance: "25.00", type: "native", enabledInApp: true },
-      ] as unknown as WalletBalanceRecord[],
-      isLoading: false,
-      error: null,
-      refresh: async () => {},
-    };
-  }
 
   const asset =
     walletBalance.step === "loaded"

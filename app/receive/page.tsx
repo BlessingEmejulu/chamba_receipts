@@ -317,12 +317,14 @@ export default function ReceivePaymentPage() {
                   <input
                     readOnly
                     value={paymentPageUrl}
-                    className="w-full rounded-xl border border-slate-200 bg-[#F8F7F2] px-3 py-2.5 font-mono text-xs text-[#102A2A] select-all"
+                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-[#F8F7F2] px-3 py-2.5 font-mono text-xs text-[#102A2A] select-all focus:outline-none"
                   />
                   <button
+                    type="button"
                     onClick={handleCopyLink}
-                    className="shrink-0 rounded-xl bg-[#075E54] p-3 text-white hover:bg-[#064e46] active:scale-95 transition-all cursor-pointer shadow-2xs"
+                    className="shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-[#075E54] text-white hover:bg-[#064e46] active:scale-95 transition-all cursor-pointer shadow-2xs"
                     title="Copy Payment Link"
+                    aria-label="Copy Payment Link"
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </button>

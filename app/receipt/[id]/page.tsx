@@ -83,27 +83,27 @@ function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12 w-full">
-      <div className="mb-6 flex items-center justify-between print:hidden">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
         <Link
           href="/income"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5F6F6D] hover:text-[#102A2A] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5F6F6D] hover:text-[#102A2A] transition-colors py-1"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 shrink-0" />
           <span>Back to Income History</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           {sourceOnChain && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-3 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
-              <ShieldCheck className="h-3 w-3 text-[#16A085]" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-2.5 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
+              <ShieldCheck className="h-3 w-3 text-[#16A085] shrink-0" />
               <span>Resolved from Stellar Horizon</span>
             </span>
           )}
           <Link
             href={`/transaction/${record.id}`}
-            className="text-xs font-bold text-[#075E54] hover:underline flex items-center gap-0.5"
+            className="text-xs font-bold text-[#075E54] hover:underline flex items-center gap-0.5 py-1"
           >
             <span>On-chain Details</span>
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
           </Link>
         </div>
       </div>

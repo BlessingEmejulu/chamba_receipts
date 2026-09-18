@@ -300,13 +300,13 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:py-12 w-full">
+    <div className="mx-auto max-w-md px-3.5 sm:px-4 py-6 sm:py-10 md:py-12 w-full">
       {/* Checkout Card */}
-      <div className="rounded-3xl border border-[#075E54]/20 bg-white p-6 sm:p-8 shadow-xl">
+      <div className="rounded-3xl border border-[#075E54]/20 bg-white p-5 sm:p-7 md:p-8 shadow-xl">
         {/* Header Ribbon */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-5 mb-6">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4 sm:pb-5 mb-5 sm:mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#075E54] text-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#075E54] text-white">
               <Receipt className="h-5 w-5 text-[#F2A900]" />
             </div>
             <div>
@@ -316,63 +316,63 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
               <span className="text-[10px] text-[#5F6F6D] font-medium">Simple. Secure. Non-custodial.</span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/10 px-2.5 py-1 text-[11px] font-bold text-[#075E54] border border-[#16A085]/20">
+          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/10 px-2.5 py-1 text-[11px] font-bold text-[#075E54] border border-[#16A085]/20 shrink-0">
             <span className="h-1.5 w-1.5 rounded-full bg-[#16A085] animate-pulse" />
             <span>Pollar Verified</span>
           </div>
         </div>
 
         {/* Worker & Amount */}
-        <div className="text-center pb-6 border-b border-slate-100">
+        <div className="text-center pb-5 sm:pb-6 border-b border-slate-100">
           <div className="text-xs text-[#5F6F6D] font-semibold uppercase tracking-wider">Paying Directly To</div>
-          <div className="font-heading text-lg font-bold text-[#102A2A] mt-1">
+          <div className="font-heading text-lg font-bold text-[#102A2A] mt-1 truncate">
             {request.workerName || "Independent Worker"}
           </div>
-          <div className="text-2xs font-mono text-[#5F6F6D] mt-0.5">
+          <div className="text-[10px] sm:text-2xs font-mono text-[#5F6F6D] mt-0.5">
             {shortAddress(request.workerAddress, 8, 8)}
           </div>
 
-          <div className="mt-5 rounded-2xl bg-[#F8F7F2] border border-[#075E54]/10 py-5 px-4">
-            <div className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A]">
+          <div className="mt-4 sm:mt-5 rounded-2xl bg-[#F8F7F2] border border-[#075E54]/10 py-4 sm:py-5 px-3 sm:px-4">
+            <div className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A] break-all">
               {formatAmount(request.amount)}{" "}
               <span className="text-xl font-bold text-[#075E54]">{request.currency}</span>
             </div>
-            <div className="text-xs text-[#5F6F6D] font-medium mt-1">{request.description}</div>
+            <div className="text-xs text-[#5F6F6D] font-medium mt-1 break-words">{request.description}</div>
           </div>
         </div>
 
         {/* Breakdown Items */}
-        <div className="py-5 space-y-2.5 text-xs border-b border-slate-100">
-          <div className="flex justify-between">
-            <span className="text-[#5F6F6D]">Payment Memo ID:</span>
-            <span className="font-mono font-bold text-[#075E54]">{request.memo}</span>
+        <div className="py-4 sm:py-5 space-y-2.5 text-xs border-b border-slate-100">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[#5F6F6D] shrink-0">Payment Memo ID:</span>
+            <span className="font-mono font-bold text-[#075E54] truncate">{request.memo}</span>
           </div>
           {request.customerName && (
-            <div className="flex justify-between">
-              <span className="text-[#5F6F6D]">Billed To:</span>
-              <span className="font-semibold text-[#102A2A]">{request.customerName}</span>
+            <div className="flex justify-between items-center gap-2">
+              <span className="text-[#5F6F6D] shrink-0">Billed To:</span>
+              <span className="font-semibold text-[#102A2A] truncate">{request.customerName}</span>
             </div>
           )}
-          <div className="flex justify-between">
-            <span className="text-[#5F6F6D]">Payment Network:</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[#5F6F6D] shrink-0">Payment Network:</span>
             <span className="font-medium text-[#102A2A]">Stellar Testnet</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-[#5F6F6D]">Custody:</span>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-[#5F6F6D] shrink-0">Custody:</span>
             <span className="font-bold text-[#075E54]">100% Non-Custodial Direct</span>
           </div>
         </div>
 
         {/* Status / Error feedback */}
         {statusMessage && (
-          <div className="mt-5 rounded-2xl border border-[#075E54]/20 bg-[#075E54]/5 p-3.5 flex items-center gap-2.5 text-xs text-[#075E54]">
+          <div className="mt-4 sm:mt-5 rounded-2xl border border-[#075E54]/20 bg-[#075E54]/5 p-3.5 flex items-center gap-2.5 text-xs text-[#075E54]">
             <Loader2 className="h-4 w-4 animate-spin shrink-0 text-[#075E54]" />
             <span className="font-semibold">{statusMessage}</span>
           </div>
         )}
 
         {errorMessage && (
-          <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
+          <div className="mt-4 sm:mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
@@ -381,16 +381,16 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
         {/* Testnet Faucet Quick Action */}
         {isAuthenticated && user?.address && (
           <div className="mt-4 rounded-2xl border border-[#F2A900]/30 bg-[#F2A900]/10 p-3.5 text-xs">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div>
                 <span className="font-bold text-[#102A2A] block">Testing on Stellar Testnet?</span>
-                <span className="text-2xs text-[#5F6F6D]">Get 10,000 free testnet XLM for this wallet</span>
+                <span className="text-[11px] sm:text-2xs text-[#5F6F6D]">Get 10,000 free testnet XLM for this wallet</span>
               </div>
               <button
                 type="button"
                 onClick={handleFundFriendbot}
                 disabled={funding}
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[#F2A900]/40 bg-white px-3 py-1.5 text-xs font-bold text-[#b37d00] shadow-2xs hover:bg-white/80 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto shrink-0 min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#F2A900]/40 bg-white px-3.5 py-2 text-xs font-bold text-[#b37d00] shadow-2xs hover:bg-white/80 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {funding ? (
                   <>
@@ -414,12 +414,13 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
         )}
 
         {/* Action Button */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-5 sm:mt-6 space-y-3">
           {isAuthenticated ? (
             <button
+              type="button"
               onClick={handlePay}
               disabled={paying}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-5 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {paying ? (
                 <>
@@ -437,17 +438,18 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
             </button>
           ) : (
             <button
+              type="button"
               onClick={openLoginModal}
               disabled={isAuthLoading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-5 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Wallet className="h-5 w-5 text-[#F2A900]" />
               <span>Connect Pollar Wallet to Pay</span>
             </button>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 text-2xs text-[#5F6F6D] pt-1">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#075E54]" />
+          <div className="flex items-center justify-center gap-1.5 text-2xs text-[#5F6F6D] pt-1 text-center">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#075E54] shrink-0" />
             <span>Non-custodial settlement confirmed on Stellar Horizon</span>
           </div>
         </div>

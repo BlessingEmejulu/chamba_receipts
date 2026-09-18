@@ -101,97 +101,97 @@ export function ReceiptCard({ record, showActions = true }: ReceiptCardProps) {
   return (
     <div className="w-full max-w-lg mx-auto">
       {/* Receipt Paper Card */}
-      <div className="receipt-paper relative rounded-3xl border border-[#075E54]/20 bg-white p-6 sm:p-8 shadow-xl print:shadow-none print:border-none print:p-2 overflow-hidden">
+      <div className="receipt-paper relative rounded-3xl border border-[#075E54]/20 bg-white p-4 sm:p-6 md:p-8 shadow-xl print:shadow-none print:border-none print:p-2 overflow-hidden">
         {/* Decorative corner accent */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#F2A900]/15 to-transparent pointer-events-none" />
 
         {/* Header Ribbon */}
-        <div className="flex items-center justify-between border-b border-[#075E54]/10 pb-5 mb-6">
+        <div className="flex items-center justify-between border-b border-[#075E54]/10 pb-4 sm:pb-5 mb-5 sm:mb-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#075E54] text-white shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#075E54] text-white shadow-sm">
               <ReceiptIcon className="h-5 w-5 text-[#F2A900]" />
             </div>
             <div>
               <h2 className="font-heading text-xs font-black tracking-widest uppercase text-[#102A2A]">
                 CHAMBA RECEIPTS
               </h2>
-              <p className="text-2xs text-[#5F6F6D] font-semibold">Digital Proof of Payment & Income</p>
+              <p className="text-[10px] sm:text-2xs text-[#5F6F6D] font-semibold">Digital Proof of Payment & Income</p>
             </div>
           </div>
 
           {/* Official Stamp */}
-          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/15 px-3 py-1 text-xs font-black text-[#075E54] border border-[#16A085]/30">
+          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/15 px-2.5 sm:px-3 py-1 text-xs font-black text-[#075E54] border border-[#16A085]/30 shrink-0">
             <ShieldCheck className="h-4 w-4 text-[#16A085]" />
             <span>PAID</span>
           </div>
         </div>
 
         {/* Big Amount Section */}
-        <div className="text-center py-5 border-b border-dashed border-[#075E54]/20 mb-6 bg-[#F8F7F2]/60 rounded-2xl">
-          <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D] block mb-1">
+        <div className="text-center py-4 sm:py-5 border-b border-dashed border-[#075E54]/20 mb-5 sm:mb-6 bg-[#F8F7F2]/60 rounded-2xl px-3">
+          <span className="text-[10px] sm:text-2xs font-bold uppercase tracking-wider text-[#5F6F6D] block mb-1">
             PAYMENT RECEIVED &bull; IMMUTABLE RECORD
           </span>
-          <div className="flex items-baseline justify-center gap-1.5">
-            <span className="font-heading text-4xl sm:text-5xl font-black tracking-tight text-[#102A2A]">
+          <div className="flex items-baseline justify-center gap-1.5 flex-wrap">
+            <span className="font-heading text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#102A2A] break-all">
               {formatAmount(record.amount)}
             </span>
-            <span className="text-xl font-bold text-[#075E54]">{record.currency}</span>
+            <span className="text-lg sm:text-xl font-bold text-[#075E54]">{record.currency}</span>
           </div>
-          <p className="font-heading text-sm font-bold text-[#102A2A] mt-2 px-4 max-w-sm mx-auto">
+          <p className="font-heading text-xs sm:text-sm font-bold text-[#102A2A] mt-2 px-2 max-w-sm mx-auto break-words">
             {record.description}
           </p>
         </div>
 
         {/* Details Grid */}
-        <div className="space-y-3.5 text-xs sm:text-sm mb-6">
-          <div className="flex justify-between items-start gap-4">
-            <span className="text-[#5F6F6D] font-medium">Worker (Recipient)</span>
-            <div className="text-right">
+        <div className="space-y-3 sm:space-y-3.5 text-xs sm:text-sm mb-6">
+          <div className="flex justify-between items-start gap-2 sm:gap-4">
+            <span className="text-[#5F6F6D] font-medium shrink-0">Worker (Recipient)</span>
+            <div className="text-right min-w-0">
               {record.workerName && (
-                <div className="font-heading font-bold text-[#102A2A]">{record.workerName}</div>
+                <div className="font-heading font-bold text-[#102A2A] truncate">{record.workerName}</div>
               )}
-              <div className="font-mono text-2xs text-[#5F6F6D]" title={record.workerAddress}>
+              <div className="font-mono text-[10px] sm:text-2xs text-[#5F6F6D]" title={record.workerAddress}>
                 {shortAddress(record.workerAddress, 6, 6)}
               </div>
             </div>
           </div>
 
-          <div className="flex justify-between items-start gap-4">
-            <span className="text-[#5F6F6D] font-medium">Customer (Payer)</span>
-            <div className="text-right">
-              <div className="font-heading font-bold text-[#102A2A]">
+          <div className="flex justify-between items-start gap-2 sm:gap-4">
+            <span className="text-[#5F6F6D] font-medium shrink-0">Customer (Payer)</span>
+            <div className="text-right min-w-0">
+              <div className="font-heading font-bold text-[#102A2A] truncate">
                 {record.payerName || "Independent Customer"}
               </div>
               {record.payerAddress && (
-                <div className="font-mono text-2xs text-[#5F6F6D]" title={record.payerAddress}>
+                <div className="font-mono text-[10px] sm:text-2xs text-[#5F6F6D]" title={record.payerAddress}>
                   {shortAddress(record.payerAddress, 6, 6)}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-[#5F6F6D] font-medium">Settlement Date</span>
-            <span className="font-semibold text-[#102A2A]">{formattedDate}</span>
+          <div className="flex justify-between items-center gap-2 sm:gap-4">
+            <span className="text-[#5F6F6D] font-medium shrink-0">Settlement Date</span>
+            <span className="font-semibold text-[#102A2A] text-right">{formattedDate}</span>
           </div>
 
-          <div className="flex justify-between items-center gap-4">
-            <span className="text-[#5F6F6D] font-medium">Receipt ID</span>
-            <span className="font-mono text-xs font-bold text-[#075E54] bg-[#075E54]/10 px-2 py-0.5 rounded">
+          <div className="flex justify-between items-center gap-2 sm:gap-4">
+            <span className="text-[#5F6F6D] font-medium shrink-0">Receipt ID</span>
+            <span className="font-mono text-xs font-bold text-[#075E54] bg-[#075E54]/10 px-2 py-0.5 rounded shrink-0">
               {record.id}
             </span>
           </div>
 
           {record.memo && (
-            <div className="flex justify-between items-center gap-4">
-              <span className="text-[#5F6F6D] font-medium">Stellar Text Memo</span>
-              <span className="font-mono text-xs text-[#102A2A] font-semibold">{record.memo}</span>
+            <div className="flex justify-between items-center gap-2 sm:gap-4">
+              <span className="text-[#5F6F6D] font-medium shrink-0">Stellar Text Memo</span>
+              <span className="font-mono text-xs text-[#102A2A] font-semibold truncate">{record.memo}</span>
             </div>
           )}
 
           {record.transactionId && (
-            <div className="flex justify-between items-center gap-4 pt-1">
-              <span className="text-[#5F6F6D] font-medium">Blockchain Hash</span>
+            <div className="flex justify-between items-center gap-2 sm:gap-4 pt-1">
+              <span className="text-[#5F6F6D] font-medium shrink-0">Blockchain Hash</span>
               <a
                 href={explorerUrl}
                 target="_blank"
@@ -199,27 +199,27 @@ export function ReceiptCard({ record, showActions = true }: ReceiptCardProps) {
                 className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#075E54] hover:underline"
               >
                 <span>{shortAddress(record.transactionId, 6, 6)}</span>
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             </div>
           )}
 
-          <div className="flex justify-between items-center gap-4 pt-2 border-t border-[#075E54]/10">
-            <span className="text-[#5F6F6D] font-medium">Security Checksum</span>
-            <span className="font-mono text-2xs font-bold text-[#102A2A] bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 sm:gap-4 pt-2 border-t border-[#075E54]/10">
+            <span className="text-[#5F6F6D] font-medium shrink-0">Security Checksum</span>
+            <span className="font-mono text-[10px] sm:text-2xs font-bold text-[#102A2A] bg-slate-100 px-2 py-1 rounded border border-slate-200 break-all text-center sm:text-right">
               {verificationHash}
             </span>
           </div>
         </div>
 
         {/* QR Code and Verification Section */}
-        <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-4 flex items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-3.5 sm:p-4 flex items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-bold text-[#102A2A]">
-              <CheckCircle2 className="h-4 w-4 text-[#16A085]" />
-              Verified On-Chain
+              <CheckCircle2 className="h-4 w-4 text-[#16A085] shrink-0" />
+              <span>Verified On-Chain</span>
             </div>
-            <p className="text-2xs text-[#5F6F6D] leading-relaxed">
+            <p className="text-[11px] sm:text-2xs text-[#5F6F6D] leading-relaxed">
               Issued via Pollar on the Stellar Network. Non-custodial, tamper-evident proof of income.
             </p>
           </div>
@@ -228,30 +228,33 @@ export function ReceiptCard({ record, showActions = true }: ReceiptCardProps) {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Responsive Equal Grid */}
         {showActions && (
-          <div className="mt-6 flex flex-wrap gap-2.5 print:hidden">
+          <div className="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2.5 print:hidden">
             <button
+              type="button"
               onClick={handleWhatsAppShare}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#16A085] px-4 py-3 text-xs font-bold text-white shadow-md shadow-[#16A085]/20 hover:bg-[#138d75] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#16A085] px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#16A085]/20 hover:bg-[#138d75] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Share2 className="h-3.5 w-3.5" />
+              <Share2 className="h-4 w-4 shrink-0" />
               <span>WhatsApp</span>
             </button>
 
             <button
+              type="button"
               onClick={handleCopyLink}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-3 text-xs font-bold text-[#102A2A] shadow-2xs hover:bg-[#F8F7F2] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-[#102A2A] shadow-2xs hover:bg-[#F8F7F2] active:scale-[0.98] transition-all cursor-pointer"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-[#075E54]" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? <Check className="h-4 w-4 text-[#075E54] shrink-0" /> : <Copy className="h-4 w-4 shrink-0" />}
               <span>{copied ? "Copied!" : "Copy Link"}</span>
             </button>
 
             <button
+              type="button"
               onClick={handlePrint}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-4 py-3 text-xs font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-4 w-4 shrink-0" />
               <span>Print / PDF</span>
             </button>
           </div>

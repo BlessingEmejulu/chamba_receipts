@@ -285,3 +285,36 @@ export async function fundWithFriendbot(address: string): Promise<{ ok: boolean;
   }
 }
 
+/**
+ * Checks whether a given Stellar address has established a trustline for an asset.
+ * Native XLM always returns true.
+ */
+export async function checkHasTrustline(
+  address: string,
+  assetCode: "USDC" | "XLM",
+  assetIssuer?: string
+): Promise<boolean> {
+  if (assetCode === "XLM") return true;
+  if (!looksLikeAddress(address)) return false;
+
+  const horizon = getHorizonUrl();
+  const issuer = assetIssuer || getUsdcIssuer();
+
+  try {
+    const res = await fetch(`${horizon}/accounts/${address.trim()}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    const balances = Array.isArray(data.balances) ? data.balances : [];
+    return balances.some(
+      (b: { asset_code?: string; asset_issuer?: string }) =>
+        b.asset_code === "USDC" && (!issuer || b.asset_issuer === issuer)
+    );
+  } catch {
+    return false;
+  }
+}
+
+

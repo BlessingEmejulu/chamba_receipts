@@ -20,7 +20,6 @@ import {
   shortAddress,
   getPaymentAsset,
   verifyPaymentOnHorizon,
-  getExplorerUrl,
   looksLikeAddress,
   fundWithFriendbot,
 } from "@/lib/stellar";
@@ -29,19 +28,19 @@ import {
   CheckCircle2,
   AlertCircle,
   Wallet,
-  ExternalLink,
   ShieldCheck,
   ArrowRight,
   Loader2,
-  Clock,
   Sparkles,
+  HeartHandshake,
+  Coins,
 } from "lucide-react";
 
 function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { runTx, tx, openLoginModal } = usePollar();
+  const { runTx, openLoginModal } = usePollar();
   const { user, isAuthenticated, isLoading: isAuthLoading } = usePollarAuth();
 
   const [request, setRequest] = useState<PaymentRequest | null>(null);
@@ -142,11 +141,17 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
       if (outcome.status === "error") {
         setPaying(false);
         setStatusMessage(null);
-        setErrorMessage(
-          outcome.details ||
-            outcome.message ||
-            "The payment was rejected or failed. Please check your wallet and try again."
-        );
+        const rawErr = outcome.details || outcome.message || "";
+        if (/trustline|no trustline|op_no_trust/i.test(rawErr)) {
+          setErrorMessage(
+            "The recipient's wallet has not opened a USDC trustline yet. On Stellar, accounts must enable trustlines to receive non-native assets. The recipient can add the USDC trustline in their Chamba Profile, or create a payment link in XLM (which requires no trustline)."
+          );
+        } else {
+          setErrorMessage(
+            rawErr ||
+              "The payment was rejected or failed. Please check your wallet and try again."
+          );
+        }
         return;
       }
 
@@ -205,9 +210,10 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
       // Celebrate with confetti
       try {
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: 90,
+          spread: 75,
           origin: { y: 0.6 },
+          colors: ["#075E54", "#F2A900", "#16A085", "#102A2A"],
         });
       } catch {
         // ignore
@@ -216,7 +222,7 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
       // Auto-redirect to verified receipt with txHash in query parameter
       setTimeout(() => {
         router.push(`/receipt/${receiptId}?tx=${txHash}`);
-      }, 1500);
+      }, 1800);
     } catch (err: unknown) {
       setPaying(false);
       setStatusMessage(null);
@@ -227,8 +233,8 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      <div className="flex flex-1 items-center justify-center p-16">
+        <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
       </div>
     );
   }
@@ -236,16 +242,16 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   if (!request) {
     return (
       <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
-          <AlertCircle className="h-6 w-6" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-4">
+          <AlertCircle className="h-7 w-7" />
         </div>
-        <h1 className="text-xl font-bold text-slate-900">Payment Request Not Found</h1>
-        <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+        <h1 className="font-heading text-2xl font-bold text-[#102A2A]">Payment Request Not Found</h1>
+        <p className="text-xs text-[#5F6F6D] mt-1.5 max-w-xs mx-auto leading-relaxed">
           The payment link you visited might be invalid, expired, or missing query parameters.
         </p>
         <Link
           href="/"
-          className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 text-xs font-bold text-[#075E54] hover:underline"
         >
           <span>Go to Chamba Receipts Home</span>
         </Link>
@@ -257,28 +263,33 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   if (confirmedReceiptId) {
     return (
       <div className="mx-auto max-w-md px-4 py-12 w-full text-center">
-        <div className="rounded-3xl border border-emerald-200 bg-white p-8 shadow-xl space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-            <ShieldCheck className="h-10 w-10" />
+        <div className="rounded-3xl border border-[#075E54]/20 bg-white p-8 shadow-xl space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#16A085]/15 text-[#075E54]">
+            <CheckCircle2 className="h-10 w-10 text-[#16A085]" />
           </div>
 
           <div>
-            <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 mb-2">
-              PAYMENT COMPLETE
+            <span className="inline-flex items-center rounded-full bg-[#16A085]/15 px-3 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30 mb-3">
+              PAYMENT COMPLETE &bull; ON-CHAIN VERIFIED
             </span>
-            <h1 className="text-2xl font-extrabold text-slate-900">
-              {formatAmount(request.amount)} {request.currency} Paid
+            <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#102A2A]">
+              Payment received. Another win!
             </h1>
-            <p className="text-sm text-slate-600 mt-1">{request.description}</p>
+            <p className="text-sm font-semibold text-[#075E54] mt-1">
+              Your hard work just paid off.
+            </p>
+            <p className="text-xs text-[#5F6F6D] mt-2">
+              {formatAmount(request.amount)} {request.currency} for &ldquo;{request.description}&rdquo;
+            </p>
           </div>
 
-          <p className="text-xs text-slate-500">
-            This payment was confirmed on the Stellar network. Your digital receipt has been generated.
+          <p className="text-xs text-[#5F6F6D] leading-relaxed">
+            This payment was confirmed on Stellar ledger. Your immutable digital proof of income has been issued.
           </p>
 
           <Link
             href={`/receipt/${confirmedReceiptId}`}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 active:scale-[0.98] transition-all"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all"
           >
             <span>View Digital Receipt</span>
             <ArrowRight className="h-4 w-4" />
@@ -291,74 +302,77 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   return (
     <div className="mx-auto max-w-md px-4 py-8 sm:py-12 w-full">
       {/* Checkout Card */}
-      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-xl">
+      <div className="rounded-3xl border border-[#075E54]/20 bg-white p-6 sm:p-8 shadow-xl">
         {/* Header Ribbon */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-5 mb-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white">
-              <Receipt className="h-4 w-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#075E54] text-white">
+              <Receipt className="h-5 w-5 text-[#F2A900]" />
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              CHAMBA CHECKOUT
-            </span>
+            <div>
+              <span className="font-heading text-xs font-black tracking-wider text-[#102A2A] uppercase block leading-none">
+                CHAMBA CHECKOUT
+              </span>
+              <span className="text-[10px] text-[#5F6F6D] font-medium">Simple. Secure. Non-custodial.</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/10 px-2.5 py-1 text-[11px] font-bold text-[#075E54] border border-[#16A085]/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#16A085] animate-pulse" />
             <span>Pollar Verified</span>
           </div>
         </div>
 
         {/* Worker & Amount */}
         <div className="text-center pb-6 border-b border-slate-100">
-          <div className="text-xs text-slate-500 font-medium">Paying To</div>
-          <div className="text-base font-bold text-slate-900 mt-0.5">
+          <div className="text-xs text-[#5F6F6D] font-semibold uppercase tracking-wider">Paying Directly To</div>
+          <div className="font-heading text-lg font-bold text-[#102A2A] mt-1">
             {request.workerName || "Independent Worker"}
           </div>
-          <div className="text-[11px] font-mono text-slate-400 mt-0.5">
+          <div className="text-2xs font-mono text-[#5F6F6D] mt-0.5">
             {shortAddress(request.workerAddress, 8, 8)}
           </div>
 
-          <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-100 py-4 px-3">
-            <div className="text-3xl font-extrabold tracking-tight text-slate-900">
+          <div className="mt-5 rounded-2xl bg-[#F8F7F2] border border-[#075E54]/10 py-5 px-4">
+            <div className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A]">
               {formatAmount(request.amount)}{" "}
-              <span className="text-xl font-bold text-emerald-600">{request.currency}</span>
+              <span className="text-xl font-bold text-[#075E54]">{request.currency}</span>
             </div>
-            <div className="text-xs text-slate-500 font-medium mt-1">{request.description}</div>
+            <div className="text-xs text-[#5F6F6D] font-medium mt-1">{request.description}</div>
           </div>
         </div>
 
         {/* Breakdown Items */}
         <div className="py-5 space-y-2.5 text-xs border-b border-slate-100">
           <div className="flex justify-between">
-            <span className="text-slate-500">Receipt Memo ID:</span>
-            <span className="font-mono font-bold text-slate-800">{request.memo}</span>
+            <span className="text-[#5F6F6D]">Payment Memo ID:</span>
+            <span className="font-mono font-bold text-[#075E54]">{request.memo}</span>
           </div>
           {request.customerName && (
             <div className="flex justify-between">
-              <span className="text-slate-500">Billed To:</span>
-              <span className="font-medium text-slate-800">{request.customerName}</span>
+              <span className="text-[#5F6F6D]">Billed To:</span>
+              <span className="font-semibold text-[#102A2A]">{request.customerName}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-slate-500">Payment Network:</span>
-            <span className="font-medium text-slate-800">Stellar Testnet</span>
+            <span className="text-[#5F6F6D]">Payment Network:</span>
+            <span className="font-medium text-[#102A2A]">Stellar Testnet</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Settlement Type:</span>
-            <span className="font-medium text-emerald-700">Instant Direct Transfer</span>
+            <span className="text-[#5F6F6D]">Custody:</span>
+            <span className="font-bold text-[#075E54]">100% Non-Custodial Direct</span>
           </div>
         </div>
 
         {/* Status / Error feedback */}
         {statusMessage && (
-          <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-3.5 flex items-center gap-2.5 text-xs text-blue-700">
-            <Loader2 className="h-4 w-4 animate-spin shrink-0 text-blue-600" />
-            <span className="font-medium">{statusMessage}</span>
+          <div className="mt-5 rounded-2xl border border-[#075E54]/20 bg-[#075E54]/5 p-3.5 flex items-center gap-2.5 text-xs text-[#075E54]">
+            <Loader2 className="h-4 w-4 animate-spin shrink-0 text-[#075E54]" />
+            <span className="font-semibold">{statusMessage}</span>
           </div>
         )}
 
         {errorMessage && (
-          <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50/70 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
+          <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
@@ -366,17 +380,17 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
 
         {/* Testnet Faucet Quick Action */}
         {isAuthenticated && user?.address && (
-          <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs">
+          <div className="mt-4 rounded-2xl border border-[#F2A900]/30 bg-[#F2A900]/10 p-3.5 text-xs">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="font-bold text-slate-800 block">Need Testnet Funds?</span>
-                <span className="text-[11px] text-slate-500">Fund your wallet with 10,000 free testnet XLM</span>
+                <span className="font-bold text-[#102A2A] block">Testing on Stellar Testnet?</span>
+                <span className="text-2xs text-[#5F6F6D]">Get 10,000 free testnet XLM for this wallet</span>
               </div>
               <button
                 type="button"
                 onClick={handleFundFriendbot}
                 disabled={funding}
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs hover:bg-blue-50 active:scale-95 transition-all disabled:opacity-50"
+                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[#F2A900]/40 bg-white px-3 py-1.5 text-xs font-bold text-[#b37d00] shadow-2xs hover:bg-white/80 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {funding ? (
                   <>
@@ -385,14 +399,14 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                    <Sparkles className="h-3.5 w-3.5 text-[#F2A900]" />
                     <span>Get 10,000 XLM</span>
                   </>
                 )}
               </button>
             </div>
             {fundingMessage && (
-              <div className="mt-2.5 rounded-lg bg-white p-2.5 text-[11px] font-medium text-slate-800 border border-blue-200">
+              <div className="mt-2.5 rounded-xl bg-white p-2.5 text-2xs font-semibold text-[#102A2A] border border-[#F2A900]/30">
                 {fundingMessage}
               </div>
             )}
@@ -405,7 +419,7 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
             <button
               onClick={handlePay}
               disabled={paying}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {paying ? (
                 <>
@@ -414,7 +428,7 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
                 </>
               ) : (
                 <>
-                  <Wallet className="h-5 w-5" />
+                  <Wallet className="h-5 w-5 text-[#F2A900]" />
                   <span>
                     Pay {formatAmount(request.amount)} {request.currency} with Pollar
                   </span>
@@ -425,16 +439,16 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
             <button
               onClick={openLoginModal}
               disabled={isAuthLoading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 active:scale-[0.98] transition-all"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
             >
-              <Wallet className="h-5 w-5" />
+              <Wallet className="h-5 w-5 text-[#F2A900]" />
               <span>Connect Pollar Wallet to Pay</span>
             </button>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-2">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            <span>Non-custodial payment verified on Stellar Ledger</span>
+          <div className="flex items-center justify-center gap-1.5 text-2xs text-[#5F6F6D] pt-1">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#075E54]" />
+            <span>Non-custodial settlement confirmed on Stellar Horizon</span>
           </div>
         </div>
       </div>
@@ -453,8 +467,8 @@ export default function PaymentCheckoutPage({
   return (
     <Suspense
       fallback={
-        <div className="flex flex-1 items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <div className="flex flex-1 items-center justify-center p-16">
+          <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
         </div>
       }
     >

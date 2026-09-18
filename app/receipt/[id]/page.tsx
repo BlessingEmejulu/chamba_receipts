@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { getPaymentRecord, savePaymentRecord, PaymentRecord } from "@/lib/storage";
 import { fetchPaymentFromHorizon } from "@/lib/stellar";
 import { ReceiptCard } from "@/components/ReceiptCard";
-import { ArrowLeft, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, ShieldCheck, ChevronRight } from "lucide-react";
 
 function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
   const searchParams = useSearchParams();
@@ -54,8 +54,8 @@ function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center p-12">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      <div className="flex flex-1 items-center justify-center p-16">
+        <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
       </div>
     );
   }
@@ -63,18 +63,18 @@ function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
   if (!record) {
     return (
       <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 mb-3">
-          <AlertCircle className="h-6 w-6" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-4">
+          <AlertCircle className="h-7 w-7" />
         </div>
-        <h1 className="text-xl font-bold text-slate-900">Receipt Not Found</h1>
-        <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-          No confirmed receipt was found with ID "{paymentId}". Receipts are generated for verified on-chain payments.
+        <h1 className="font-heading text-2xl font-bold text-[#102A2A]">Receipt Not Found</h1>
+        <p className="text-xs text-[#5F6F6D] mt-1.5 max-w-xs mx-auto leading-relaxed">
+          No confirmed receipt was found with ID &ldquo;{paymentId}&rdquo;. Receipts are generated for verified on-chain payments.
         </p>
         <Link
           href="/dashboard"
-          className="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline"
+          className="mt-6 inline-flex items-center gap-1.5 text-xs font-bold text-[#075E54] hover:underline"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-4 w-4" />
           <span>Back to Dashboard</span>
         </Link>
       </div>
@@ -86,23 +86,24 @@ function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
       <div className="mb-6 flex items-center justify-between print:hidden">
         <Link
           href="/income"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5F6F6D] hover:text-[#102A2A] transition-colors"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-4 w-4" />
           <span>Back to Income History</span>
         </Link>
         <div className="flex items-center gap-3">
           {sourceOnChain && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
-              <ShieldCheck className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-3 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
+              <ShieldCheck className="h-3 w-3 text-[#16A085]" />
               <span>Resolved from Stellar Horizon</span>
             </span>
           )}
           <Link
             href={`/transaction/${record.id}`}
-            className="text-xs font-semibold text-emerald-600 hover:underline"
+            className="text-xs font-bold text-[#075E54] hover:underline flex items-center gap-0.5"
           >
-            View Blockchain Details
+            <span>On-chain Details</span>
+            <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
@@ -123,8 +124,8 @@ export default function ReceiptDetailPage({
   return (
     <Suspense
       fallback={
-        <div className="flex flex-1 items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <div className="flex flex-1 items-center justify-center p-16">
+          <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
         </div>
       }
     >

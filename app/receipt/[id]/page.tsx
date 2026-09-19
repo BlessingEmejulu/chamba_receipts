@@ -55,60 +55,68 @@ function ReceiptDetailContent({ paymentId }: { paymentId: string }) {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-16">
-        <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
+        <Loader2 className="h-6 w-6 animate-spin text-teal" aria-label="Loading receipt" />
       </div>
     );
   }
 
   if (!record) {
     return (
-      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-4">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <h1 className="font-heading text-2xl font-bold text-[#102A2A]">Receipt Not Found</h1>
-        <p className="text-xs text-[#5F6F6D] mt-1.5 max-w-xs mx-auto leading-relaxed">
-          No confirmed receipt was found with ID &ldquo;{paymentId}&rdquo;. Receipts are generated for verified on-chain payments.
+      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <span className="flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-2">
+          <AlertCircle className="h-5 w-5 text-coral" aria-hidden="true" />
+        </span>
+        <h1 className="bo-display mt-7 text-2xl text-ink">Receipt not found</h1>
+        <p className="mt-4 text-sm leading-relaxed text-ink-3">
+          No confirmed receipt exists with ID{" "}
+          <span className="bo-code text-ink-2">{paymentId}</span>. Receipts are generated
+          only for verified on-chain payments.
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-flex items-center gap-1.5 text-xs font-bold text-[#075E54] hover:underline"
+          className="bo-btn bo-btn-ghost mt-8 px-5 py-3 text-xs uppercase tracking-[0.1em]"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Dashboard</span>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          <span>Back to dashboard</span>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12 w-full">
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
+    <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <Link
           href="/income"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5F6F6D] hover:text-[#102A2A] transition-colors py-1"
+          className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.1em] text-ink-3 transition-colors hover:text-ink"
         >
-          <ArrowLeft className="h-4 w-4 shrink-0" />
-          <span>Back to Income History</span>
+          <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>Income history</span>
         </Link>
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+
+        <div className="flex flex-wrap items-center gap-3">
           {sourceOnChain && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-2.5 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
-              <ShieldCheck className="h-3 w-3 text-[#16A085] shrink-0" />
-              <span>Resolved from Stellar Horizon</span>
+            <span className="bo-chip bo-chip-ok">
+              <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <span>Resolved from Horizon</span>
             </span>
           )}
           <Link
             href={`/transaction/${record.id}`}
-            className="text-xs font-bold text-[#075E54] hover:underline flex items-center gap-0.5 py-1"
+            className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-[0.1em] text-teal hover:underline"
           >
-            <span>On-chain Details</span>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <span>On-chain detail</span>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           </Link>
         </div>
       </div>
 
       <ReceiptCard record={record} showActions={true} />
+
+      <p className="mt-6 text-center text-2xs leading-relaxed text-ink-4 print:hidden">
+        Printing renders this receipt as a clean black-on-white document suitable for
+        banks, landlords and lenders.
+      </p>
     </div>
   );
 }
@@ -125,7 +133,7 @@ export default function ReceiptDetailPage({
     <Suspense
       fallback={
         <div className="flex flex-1 items-center justify-center p-16">
-          <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
+          <Loader2 className="h-6 w-6 animate-spin text-teal" aria-label="Loading" />
         </div>
       }
     >

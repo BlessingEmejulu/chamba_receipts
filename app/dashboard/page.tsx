@@ -11,6 +11,7 @@ import {
   DashboardStats,
 } from "@/lib/storage";
 import { formatAmount, shortAddress } from "@/lib/stellar";
+import { Mark, Corners, Eyebrow } from "@/components/blackout";
 import {
   DollarSign,
   TrendingUp,
@@ -18,18 +19,16 @@ import {
   ArrowUpRight,
   PlusCircle,
   FileText,
-  Clock,
   ChevronRight,
   ShieldCheck,
-  Sparkles,
-  CheckCircle2,
+  ArrowRight,
   Receipt,
   Wallet,
   RefreshCw,
   Copy,
   Check,
+  CheckCircle2,
   Plus,
-  ExternalLink,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -104,43 +103,90 @@ export default function DashboardPage() {
 
   if (!isAuthenticated && !isLoading) {
     return (
-      <div className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#075E54]/10 text-[#075E54] mb-6 shadow-sm">
-          <Receipt className="h-8 w-8 text-[#075E54]" />
-        </div>
-        <h1 className="font-heading text-3xl font-black tracking-tight text-[#102A2A]">
-          Connect your Pollar Wallet
-        </h1>
-        <p className="mt-3 text-sm text-[#5F6F6D] leading-relaxed max-w-sm">
-          Sign in with Pollar to view your verified receipts, manage payment links, and track your growing proof of income.
+      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <span className="flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-2">
+          <Receipt className="h-5 w-5 text-teal" aria-hidden="true" />
+        </span>
+        <h1 className="bo-display mt-7 text-3xl text-ink">Connect your Pollar wallet</h1>
+        <p className="mt-4 text-sm leading-relaxed text-ink-2">
+          Sign in with Pollar to view your verified receipts, manage payment links, and
+          track your growing proof of income.
         </p>
         <button
           onClick={login}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+          className="bo-btn bo-btn-primary mt-8 px-6 py-3.5 text-xs uppercase tracking-[0.1em]"
         >
-          <Sparkles className="h-4 w-4 text-[#F2A900]" />
-          <span>Sign In with Pollar</span>
+          <span>Sign in with Pollar</span>
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     );
   }
 
-  const workerName = user?.displayName || user?.email || (user?.address ? shortAddress(user.address, 6, 4) : "Worker");
+  const workerName =
+    user?.displayName ||
+    user?.email ||
+    (user?.address ? shortAddress(user.address, 6, 4) : "Worker");
+
+  const tiles = [
+    {
+      label: "Total verified income",
+      icon: DollarSign,
+      value:
+        stats.totalUsdc > 0
+          ? formatAmount(stats.totalUsdc)
+          : stats.totalXlm > 0
+          ? formatAmount(stats.totalXlm)
+          : "0.00",
+      unit: stats.totalUsdc > 0 ? "USDC" : stats.totalXlm > 0 ? "XLM" : "USDC",
+      tone: "text-teal",
+      foot:
+        stats.totalUsdc > 0 && stats.totalXlm > 0
+          ? `+ ${formatAmount(stats.totalXlm)} XLM`
+          : "Immutable on-chain balance",
+    },
+    {
+      label: "Confirmed receipts",
+      icon: Layers,
+      value: String(stats.paymentCount),
+      unit: "TXNS",
+      tone: "text-gold",
+      foot: "Settled via Stellar Horizon",
+    },
+    {
+      label: "This month",
+      icon: TrendingUp,
+      value:
+        stats.thisMonthUsdc > 0
+          ? formatAmount(stats.thisMonthUsdc)
+          : stats.thisMonthXlm > 0
+          ? formatAmount(stats.thisMonthXlm)
+          : "0.00",
+      unit: stats.thisMonthUsdc > 0 ? "USDC" : stats.thisMonthXlm > 0 ? "XLM" : "USDC",
+      tone: "text-ink",
+      foot: "Current calendar window",
+    },
+    {
+      label: "Average ticket",
+      icon: ArrowUpRight,
+      value: formatAmount(stats.averagePaymentUsdc),
+      unit: "USDC",
+      tone: "text-ink",
+      foot: "Per confirmed payment",
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full space-y-8">
-      {/* Welcome Bar with Human Warmth */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-[#075E54]/10 pb-8">
-        <div>
-          <div className="inline-flex items-center gap-2 text-xs font-bold text-[#075E54] uppercase tracking-wider mb-2">
-            <span className="h-2 w-2 rounded-full bg-[#16A085]" />
-            Verifiable Financial Identity
-          </div>
-          <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-[#102A2A]">
+    <div className="bo-rails mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* Command bar */}
+      <div className="flex flex-col gap-6 border-b border-line-2 pb-8 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <Eyebrow live>Verifiable financial identity</Eyebrow>
+          <h1 className="bo-display mt-5 truncate text-3xl text-ink sm:text-4xl">
             Good day, {workerName}.
           </h1>
-          <p className="text-sm text-[#5F6F6D] mt-1.5 font-normal">
-            Here is how your work is doing. Every confirmed receipt adds to your financial dignity.
+          <p className="mt-3 text-sm text-ink-2">
+            Every confirmed receipt adds to your financial record.
           </p>
         </div>
 
@@ -148,117 +194,107 @@ export default function DashboardPage() {
           <button
             onClick={handleSync}
             disabled={isSyncing || balanceLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-3 text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
+            className="bo-btn bo-btn-ghost px-4 py-3 text-xs uppercase tracking-[0.1em]"
             title="Sync latest payments directly from Stellar Horizon ledger"
           >
-            <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing || balanceLoading ? "animate-spin" : ""}`} />
-            <span>{isSyncing ? "Syncing Ledger..." : "Sync Ledger"}</span>
+            <RefreshCw className={`h-4 w-4 text-teal ${isSyncing || balanceLoading ? "animate-spin" : ""}`} />
+            <span>{isSyncing ? "Syncing..." : "Sync Ledger"}</span>
           </button>
           <Link
             href="/receive"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all"
+            className="bo-btn bo-btn-primary px-5 py-3 text-xs uppercase tracking-[0.1em]"
           >
-            <PlusCircle className="h-4 w-4" />
-            <span>Create Payment Request</span>
+            <PlusCircle className="h-4 w-4" aria-hidden="true" />
+            <span>New request</span>
           </Link>
           <Link
             href="/report"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-5 py-3 text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs"
+            className="bo-btn bo-btn-ghost px-5 py-3 text-xs uppercase tracking-[0.1em]"
           >
-            <FileText className="h-4 w-4 text-[#075E54]" />
-            <span>Income Statement</span>
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            <span>Statement</span>
           </Link>
         </div>
       </div>
 
-      {/* Live Stellar Wallet & Real-time Balance Card */}
+      {/* Live Stellar Wallet & Real-time Balance Panel */}
       {user?.address && (
-        <div className="rounded-3xl border border-[#075E54]/20 bg-gradient-to-br from-white via-white to-[#F8F7F2] p-6 sm:p-7 shadow-sm">
+        <div className="bo-panel mt-8 p-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             {/* Wallet Info & Address */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-2.5 w-2.5 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal" />
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#075E54]">
+                <span className="bo-label-sm text-teal">
                   Non-Custodial Stellar Wallet (Live Ledger)
                 </span>
                 {lastSynced && (
-                  <span className="text-2xs text-[#5F6F6D]">
+                  <span className="text-2xs text-ink-3">
                     &bull; Synced {lastSynced.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-[#F8F7F2] px-3.5 py-2 font-mono text-xs font-semibold text-[#102A2A]">
-                  <Wallet className="h-4 w-4 text-[#075E54]" />
+                <div className="inline-flex items-center gap-2 border border-line-2 bg-surface-2 px-3 py-1.5 font-mono text-xs text-ink">
+                  <Wallet className="h-3.5 w-3.5 text-teal" />
                   <span>{shortAddress(user.address, 8, 8)}</span>
                 </div>
                 <button
                   onClick={handleCopyAddress}
-                  className="rounded-xl border border-[#075E54]/20 bg-white p-2 text-[#075E54] hover:bg-[#F8F7F2] active:scale-95 transition-all shadow-2xs cursor-pointer"
+                  className="bo-btn bo-btn-ghost h-8 w-8"
                   title="Copy Stellar Address"
                 >
-                  {copiedAddress ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                  {copiedAddress ? <Check className="h-3.5 w-3.5 text-teal" /> : <Copy className="h-3.5 w-3.5" />}
                 </button>
                 <Link
                   href="/profile"
-                  className="text-xs font-semibold text-[#075E54] hover:underline ml-1"
+                  className="bo-label-sm text-ink-2 hover:text-ink ml-2"
                 >
-                  Manage Wallet
+                  Manage
                 </Link>
               </div>
             </div>
 
             {/* Current Available Balances */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* USDC Balance */}
-              <div className="rounded-2xl border border-[#075E54]/15 bg-white p-4 shadow-2xs min-w-[200px]">
+              <div className="border border-line-2 bg-surface-2 p-4 min-w-[200px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-                    Available USDC
-                  </span>
+                  <span className="bo-label-sm">Available USDC</span>
                   {hasUsdcTrustline ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A085] bg-[#16A085]/10 px-2 py-0.5 rounded-full">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Trustline Active
-                    </span>
+                    <span className="bo-chip bo-chip-ok text-[10px]">Active</span>
                   ) : (
                     <Link
                       href="/profile"
-                      className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full hover:bg-amber-100"
+                      className="bo-chip bo-chip-amber text-[10px] hover:underline"
                     >
-                      <Plus className="h-3 w-3" />
-                      Add Trustline
+                      + Trustline
                     </Link>
                   )}
                 </div>
-                <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="font-heading text-2xl sm:text-3xl font-black text-[#102A2A]">
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="bo-display bo-num text-2xl text-ink">
                     {formatAmount(usdcBalance)}
                   </span>
-                  <span className="text-xs font-bold text-[#075E54]">USDC</span>
+                  <span className="bo-label-sm text-teal">USDC</span>
                 </div>
               </div>
 
               {/* XLM Balance */}
-              <div className="rounded-2xl border border-[#075E54]/15 bg-white p-4 shadow-2xs min-w-[200px]">
+              <div className="border border-line-2 bg-surface-2 p-4 min-w-[200px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-                    Native XLM
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#5F6F6D] bg-slate-100 px-2 py-0.5 rounded-full">
-                    Ledger Gas
-                  </span>
+                  <span className="bo-label-sm">Native XLM</span>
+                  <span className="bo-label-sm text-ink-3">Gas</span>
                 </div>
-                <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="font-heading text-2xl sm:text-3xl font-black text-[#102A2A]">
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="bo-display bo-num text-2xl text-ink">
                     {formatAmount(xlmBalance)}
                   </span>
-                  <span className="text-xs font-bold text-[#5F6F6D]">XLM</span>
+                  <span className="bo-label-sm text-ink-2">XLM</span>
                 </div>
               </div>
             </div>
@@ -266,261 +302,179 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Motivational Progress Banner */}
-      <div className="rounded-3xl border border-[#075E54]/15 bg-white p-6 sm:p-8 shadow-sm overflow-hidden relative">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+      {/* Progress feature banner */}
+      <div className="bo-panel relative mt-8 overflow-hidden p-8 sm:p-10">
+        <Corners />
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-12">
           <div className="md:col-span-8">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F2A900]/15 px-3 py-1 text-2xs font-bold text-[#b37d00] uppercase tracking-wide mb-2">
-              <Sparkles className="h-3 w-3" />
-              Your Work is Building Something
-            </div>
-            <h2 className="font-heading text-xl sm:text-2xl font-black text-[#102A2A]">
-              Small payments add up to life milestones.
+            <Eyebrow>Cumulative record</Eyebrow>
+            <h2 className="bo-heading mt-4 text-2xl text-ink sm:text-3xl">
+              Small payments compile into verifiable credibility.
             </h2>
-            <p className="text-xs sm:text-sm text-[#5F6F6D] mt-2 leading-relaxed">
-              Every invoice settled through Pollar is permanently recorded. Use your exportable Income Statement when renting a studio, applying for business grants, or seeking visa sponsorship.
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-2">
+              Every invoice settled through Pollar is anchored to the Stellar ledger. Export
+              a signed income statement for studios, credit unions, or visa applications.
             </p>
           </div>
-          <div className="md:col-span-4 relative h-28 sm:h-32 rounded-2xl overflow-hidden shadow-inner border border-slate-100">
+          <div className="relative h-32 overflow-hidden border border-line-2 bg-surface-3 sm:h-36 md:col-span-4">
             <Image
               src="/images/worker-artisan-entrepreneur.jpg"
-              alt="African entrepreneur managing business"
+              alt="African entrepreneur managing her business"
               fill
               className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 300px"
+              sizes="(max-width: 768px) 100vw, 320px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#102A2A]/70 via-transparent to-transparent flex items-end p-2.5">
-              <span className="text-2xs font-semibold text-white">Documented & Verifiable</span>
-            </div>
+            <span className="bo-label-sm absolute bottom-3 left-4 z-10">
+              Documented &amp; verifiable
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Card 1: Total Verified Income */}
-        <div className="rounded-3xl border border-[#075E54]/15 bg-white p-6 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Total Verified Income
-            </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#075E54]/10 text-[#075E54]">
-              <DollarSign className="h-5 w-5" />
+      {/* Metric tiles */}
+      <div className="mt-8 grid grid-cols-1 gap-px bg-line-2 sm:grid-cols-2 lg:grid-cols-4">
+        {tiles.map((t) => {
+          const Icon = t.icon;
+          return (
+            <div key={t.label} className="group bg-surface-2 p-6">
+              <div className="flex items-start justify-between gap-3">
+                <span className="bo-label-sm max-w-[8rem] leading-relaxed">{t.label}</span>
+                <Icon className={`h-4 w-4 shrink-0 ${t.tone}`} aria-hidden="true" />
+              </div>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="bo-display bo-num text-3xl text-ink sm:text-4xl">
+                  {t.value}
+                </span>
+                <span className={`bo-label-sm ${t.tone}`}>{t.unit}</span>
+              </div>
+              <div className="mt-4 flex items-center gap-2 border-t border-line-1 pt-3">
+                <Mark />
+                <span className="text-2xs text-ink-3">{t.foot}</span>
+              </div>
             </div>
-          </div>
-          <div className="mt-4 flex items-baseline gap-1.5">
-            <span className="font-heading text-3xl sm:text-4xl font-black text-[#102A2A]">
-              {stats.totalUsdc > 0
-                ? formatAmount(stats.totalUsdc)
-                : stats.totalXlm > 0
-                ? formatAmount(stats.totalXlm)
-                : "0.00"}
-            </span>
-            <span className="text-sm font-bold text-[#075E54]">
-              {stats.totalUsdc > 0 ? "USDC" : stats.totalXlm > 0 ? "XLM" : "USDC"}
-            </span>
-          </div>
-          {stats.totalUsdc > 0 && stats.totalXlm > 0 ? (
-            <div className="text-xs text-[#5F6F6D] mt-1.5 font-medium">
-              + {formatAmount(stats.totalXlm)} XLM
-            </div>
-          ) : (
-            <div className="text-2xs text-[#5F6F6D] mt-1.5 flex items-center gap-1 font-medium">
-              <CheckCircle2 className="h-3 w-3 text-[#16A085]" />
-              Immutable on-chain earnings
-            </div>
-          )}
-        </div>
-
-        {/* Card 2: Payments Count */}
-        <div className="rounded-3xl border border-[#075E54]/15 bg-white p-6 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Confirmed Receipts
-            </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F2A900]/15 text-[#b37d00]">
-              <Layers className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline gap-1.5">
-            <span className="font-heading text-3xl sm:text-4xl font-black text-[#102A2A]">
-              {stats.paymentCount}
-            </span>
-            <span className="text-xs font-semibold text-[#5F6F6D]">receipts</span>
-          </div>
-          <div className="text-2xs text-[#5F6F6D] mt-1.5 flex items-center gap-1 font-medium">
-            <ShieldCheck className="h-3 w-3 text-[#075E54]" />
-            Settled via Stellar Horizon
-          </div>
-        </div>
-
-        {/* Card 3: This Month */}
-        <div className="rounded-3xl border border-[#075E54]/15 bg-white p-6 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              This Month
-            </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#16A085]/15 text-[#16A085]">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline gap-1.5">
-            <span className="font-heading text-3xl sm:text-4xl font-black text-[#102A2A]">
-              {stats.thisMonthUsdc > 0
-                ? formatAmount(stats.thisMonthUsdc)
-                : stats.thisMonthXlm > 0
-                ? formatAmount(stats.thisMonthXlm)
-                : "0.00"}
-            </span>
-            <span className="text-sm font-bold text-[#16A085]">
-              {stats.thisMonthUsdc > 0 ? "USDC" : stats.thisMonthXlm > 0 ? "XLM" : "USDC"}
-            </span>
-          </div>
-          <div className="text-2xs text-[#5F6F6D] mt-1.5 font-medium">
-            Current calendar window
-          </div>
-        </div>
-
-        {/* Card 4: Average Payment */}
-        <div className="rounded-3xl border border-[#075E54]/15 bg-white p-6 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Average Ticket
-            </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#075E54]/10 text-[#075E54]">
-              <ArrowUpRight className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline gap-1.5">
-            <span className="font-heading text-3xl sm:text-4xl font-black text-[#102A2A]">
-              {formatAmount(stats.averagePaymentUsdc)}
-            </span>
-            <span className="text-sm font-bold text-[#075E54]">USDC</span>
-          </div>
-          <div className="text-2xs text-[#5F6F6D] mt-1.5 font-medium">
-            Per confirmed payment
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Recent Payments Section */}
-      <div className="rounded-3xl border border-[#075E54]/15 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between border-b border-[#075E54]/10 px-6 sm:px-8 py-5">
-          <div className="flex items-center gap-2.5">
-            <Clock className="h-5 w-5 text-[#075E54]" />
-            <h2 className="font-heading text-lg font-bold text-[#102A2A]">Recent Payments</h2>
+      {/* Ledger */}
+      <section className="bo-panel mt-8">
+        <div className="flex items-center justify-between border-b border-line-2 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <Mark accent />
+            <h2 className="bo-label text-ink">Recent payments</h2>
             {isSyncing && (
-              <span className="inline-flex items-center gap-1 text-2xs text-[#5F6F6D] font-normal">
-                <RefreshCw className="h-3 w-3 animate-spin text-[#075E54]" />
+              <span className="inline-flex items-center gap-1 text-2xs text-ink-3">
+                <RefreshCw className="h-3 w-3 animate-spin text-teal" />
                 Syncing ledger...
               </span>
             )}
           </div>
           <Link
             href="/income"
-            className="text-xs font-bold text-[#075E54] hover:text-[#064e46] flex items-center gap-1 group"
+            className="group inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.1em] text-teal hover:text-ink"
           >
-            <span>View Full Income Story</span>
-            <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span>Full history</span>
+            <ChevronRight
+              className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
           </Link>
         </div>
 
         {stats.recentPayments.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#075E54]/10 text-[#075E54] mb-4">
-              <Sparkles className="h-7 w-7 text-[#F2A900]" />
-            </div>
-            <h3 className="font-heading text-lg font-bold text-[#102A2A]">
+          <div className="px-6 py-20 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-3">
+              <Receipt className="h-5 w-5 text-ink-3" aria-hidden="true" />
+            </span>
+            <h3 className="bo-heading mt-6 text-lg font-medium text-ink">
               {isSyncing ? "Checking Stellar ledger..." : "Your first payment starts your story."}
             </h3>
-            <p className="text-xs sm:text-sm text-[#5F6F6D] mt-2 max-w-md mx-auto leading-relaxed">
-              Create a payment request to start receiving direct USDC/XLM payments and generating digital proof of income.
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-3">
+              Create a payment request to start receiving direct USDC or XLM payments and
+              generating digital proof of income.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs"
+                className="bo-btn bo-btn-ghost px-5 py-3 text-xs uppercase tracking-[0.1em]"
               >
-                <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`h-4 w-4 text-teal ${isSyncing ? "animate-spin" : ""}`} />
                 <span>Check Stellar Horizon</span>
               </button>
               <Link
                 href="/receive"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] transition-all"
+                className="bo-btn bo-btn-primary px-5 py-3 text-xs uppercase tracking-[0.1em]"
               >
-                <PlusCircle className="h-4 w-4" />
-                <span>Create Payment Request</span>
+                <PlusCircle className="h-4 w-4" aria-hidden="true" />
+                <span>Create payment request</span>
               </Link>
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-[#075E54]/10">
+          <ul className="divide-y divide-line-1">
             {stats.recentPayments.map((p) => {
-              const formattedDate = new Date(p.paidAt || p.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              });
+              const formattedDate = new Date(p.paidAt || p.createdAt).toLocaleDateString(
+                "en-US",
+                { month: "short", day: "numeric", year: "numeric" }
+              );
               return (
-                <div
+                <li
                   key={p.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between px-6 sm:px-8 py-4 sm:py-5 hover:bg-[#F8F7F2]/50 transition-colors gap-4"
+                  className="bo-hover-row flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#16A085]/10 text-[#075E54]">
-                      <ShieldCheck className="h-6 w-6 text-[#16A085]" />
-                    </div>
-                    <div>
-                      <div className="font-heading font-bold text-[#102A2A] text-sm sm:text-base">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-teal/30 bg-teal/8">
+                      <ShieldCheck className="h-4 w-4 text-teal" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-ink">
                         {p.description}
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-[#5F6F6D] mt-0.5">
-                        <span className="font-semibold text-[#102A2A]">{p.payerName || "Customer"}</span>
-                        <span>&bull;</span>
-                        <span>{formattedDate}</span>
-                        <span>&bull;</span>
-                        <span className="font-mono text-2xs bg-slate-100 px-1.5 py-0.5 rounded text-[#5F6F6D]">
-                          {p.id}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-2xs text-ink-2">
+                          {p.payerName || "Customer"}
                         </span>
+                        <span className="bo-num text-2xs text-ink-3">{formattedDate}</span>
+                        <span className="bo-code text-2xs text-ink-3">{p.id}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-5">
+                  <div className="flex items-center justify-between gap-5 sm:justify-end">
                     <div className="text-right">
-                      <div className="font-heading text-base sm:text-lg font-black text-[#102A2A]">
-                        +{formatAmount(p.amount)} {p.currency}
+                      <div className="bo-num text-base font-medium text-ink">
+                        +{formatAmount(p.amount)}{" "}
+                        <span className="text-teal">{p.currency}</span>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-2.5 py-0.5 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
-                        <CheckCircle2 className="h-3 w-3 text-[#16A085]" />
-                        CONFIRMED
-                      </span>
+                      <span className="bo-chip bo-chip-ok mt-1.5">Confirmed</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-px bg-line-2">
                       <Link
                         href={`/receipt/${p.id}`}
-                        className="rounded-xl border border-[#075E54]/20 bg-white p-2.5 text-[#075E54] hover:bg-[#075E54] hover:text-white transition-all shadow-2xs"
-                        title="View Official Receipt"
+                        className="bo-btn bo-btn-secondary h-9 w-9"
+                        title="View official receipt"
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-4 w-4" aria-hidden="true" />
+                        <span className="sr-only">Receipt {p.id}</span>
                       </Link>
                       <Link
                         href={`/transaction/${p.id}`}
-                        className="rounded-xl border border-[#075E54]/20 bg-white p-2.5 text-[#5F6F6D] hover:bg-slate-100 hover:text-[#102A2A] transition-all shadow-2xs"
-                        title="Stellar Horizon Details"
+                        className="bo-btn bo-btn-secondary h-9 w-9"
+                        title="Stellar Horizon details"
                       >
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                        <span className="sr-only">Ledger detail {p.id}</span>
                       </Link>
                     </div>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
-      </div>
+      </section>
     </div>
   );
 }

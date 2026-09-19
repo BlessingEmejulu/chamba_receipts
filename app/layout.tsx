@@ -1,25 +1,41 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { PollarAppProvider } from "@/lib/pollar";
 import { Navbar } from "@/components/Navbar";
+import { ChambaMark } from "@/components/ChambaMark";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-heading",
+/**
+ * Blackout specifies Lausanne as the single family throughout. Lausanne is a
+ * licensed face, so Inter Tight stands in: the same compact neo-grotesk
+ * skeleton, tight tracking, and a full weight range. To adopt real Lausanne
+ * later, swap this one declaration for a next/font/local definition bound to
+ * the same --font-blackout variable; nothing else in the system changes.
+ */
+const blackout = Inter_Tight({
+  variable: "--font-blackout",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-sans",
+/**
+ * Reserved for Stellar public keys and transaction hashes only. Character
+ * disambiguation is a correctness requirement when someone is verifying a
+ * 56-character address by eye, so it earns its place beside the single family.
+ */
+const blackoutMono = JetBrains_Mono({
+  variable: "--font-blackout-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#06060C",
 };
 
 export const metadata: Metadata = {
@@ -36,25 +52,62 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${inter.variable} h-full antialiased`}
+      className={`${blackout.variable} ${blackoutMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#F8F7F2] text-[#102A2A] font-sans">
+      <body className="min-h-full flex flex-col bg-canvas text-ink font-sans">
         <PollarAppProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-teal focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#04140f]"
+          >
+            Skip to content
+          </a>
+
           <Navbar />
-          <main className="flex-1 flex flex-col">{children}</main>
-          <footer className="border-t border-[#E8E5DD] bg-white/80 py-8 text-xs text-[#5F6F6D] print:hidden">
-            <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
-                <span className="font-bold text-[#102A2A] tracking-tight">Chamba Receipts</span>
-                <span className="hidden sm:inline text-slate-300">•</span>
-                <p className="text-[#5F6F6D]">
-                  Every payment tells a story of work, progress, and possibility.
-                </p>
+
+          <main id="main" className="flex-1 flex flex-col">
+            {children}
+          </main>
+
+          <footer className="relative mt-auto border-t border-line-2 bg-surface-1 print:hidden">
+            <div className="bo-grid absolute inset-0 opacity-40 pointer-events-none" />
+
+            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bo-rails">
+              <div className="flex flex-col gap-6 py-10 sm:flex-row sm:items-start sm:justify-between">
+                <div className="max-w-sm">
+                  <div className="flex items-center gap-2.5">
+                    <ChambaMark className="h-5 w-5 text-teal" />
+                    <span className="bo-heading text-sm font-semibold uppercase tracking-[0.18em] text-ink">
+                      Chamba Receipts
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-2">
+                    Every payment tells a story of work, progress, and
+                    possibility.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-10 gap-y-4 sm:grid-cols-2">
+                  <div>
+                    <div className="bo-label-sm">Settlement</div>
+                    <div className="mt-2 text-sm text-ink-2">
+                      Pollar &middot; Stellar
+                    </div>
+                  </div>
+                  <div>
+                    <div className="bo-label-sm">Custody</div>
+                    <div className="mt-2 text-sm text-teal">Non-custodial</div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-4 text-[#8A9694]">
-                <span>Built on Pollar & Stellar</span>
-                <span>•</span>
-                <span>© 2026 Chamba</span>
+
+              <div className="flex flex-col gap-2 border-t border-line-1 py-5 text-2xs sm:flex-row sm:items-center sm:justify-between">
+                <span className="bo-label-sm">
+                  &copy; 2026 Chamba &middot; All rights reserved
+                </span>
+                <span className="bo-label-sm bo-code tracking-[0.2em]">
+                  CHAMBA-OS / v1
+                </span>
               </div>
             </div>
           </footer>

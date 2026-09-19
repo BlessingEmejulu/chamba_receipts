@@ -1,82 +1,685 @@
 @import "tailwindcss";
 
-:root {
-  --background: #F8F7F2;
-  --foreground: #102A2A;
-  --primary: #075E54;
-  --primary-hover: #054840;
-  --primary-foreground: #FFFFFF;
-  --primary-light: #E6F3F1;
-  --secondary: #F2A900;
-  --secondary-hover: #D99600;
-  --secondary-light: #FEF7E6;
-  --accent: #16A085;
-  --accent-light: #E8F8F5;
-  --card: #FFFFFF;
-  --card-foreground: #102A2A;
-  --border: #E8E5DD;
-  --text-muted: #8A9694;
-  --text-secondary: #5F6F6D;
-  --error: #C0392B;
-  --success: #138A72;
+/* ============================================================================
+   BLACKOUT x CHAMBA
+   ----------------------------------------------------------------------------
+   Blackout's structure  : one continuous near-black indigo canvas, square
+                           geometry, quiet hairline linework, registration
+                           marks, flat surfaces, restrained state accents.
+   Chamba's identity     : teal, gold and mint carry every accent role that
+                           Blackout assigns to lavender / cyan / orange / pink.
+   ============================================================================ */
+
+@theme {
+  /* ---- Canvas: one continuous near-black indigo family -------------------- */
+  --color-canvas: #06060c;
+  --color-surface-1: #0a0a12;
+  --color-surface-2: #0e0e17;
+  --color-surface-3: #13131d;
+  --color-surface-4: #1a1a26;
+
+  /* ---- Linework: quiet hairlines ----------------------------------------- */
+  --color-line-1: rgba(255, 255, 255, 0.055);
+  --color-line-2: rgba(255, 255, 255, 0.1);
+  --color-line-3: rgba(255, 255, 255, 0.18);
+
+  /* ---- Ink: translucent cool hierarchy ----------------------------------- */
+  --color-ink: rgba(232, 238, 240, 0.96);
+  --color-ink-2: rgba(206, 220, 224, 0.66);
+  --color-ink-3: rgba(190, 208, 214, 0.58);
+  --color-ink-4: rgba(186, 206, 212, 0.34);
+
+  /* ---- Chamba accents, lifted to read on the dark canvas ------------------ */
+  --color-teal: #2cc5a0;        /* brand lead      (Blackout: lavender)  */
+  --color-teal-dim: #1e8f74;
+  --color-teal-deep: #075e54;   /* retained for paper / print            */
+  --color-gold: #f2a900;        /* attention       (Blackout: orange)    */
+  --color-gold-soft: #ffc845;
+  --color-aqua: #46d5d0;        /* data / info     (Blackout: cyan)      */
+  --color-coral: #ff5c7a;       /* critical        (Blackout: pink)      */
+  --color-violet: #8b7cf6;      /* system / technical (Blackout: violet) */
+
+  /* ---- Square geometry: the radius scale collapses to zero ---------------- */
+  /* rounded-full is a literal in Tailwind v4, so genuinely circular
+     controls keep their rounding while everything else goes square.  */
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
+  /* ---- Flat surfaces: no ordinary outer shadow --------------------------- */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+
+  /* ---- Type: one family throughout --------------------------------------- */
+  --font-sans: var(--font-blackout), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-blackout), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-blackout-mono), ui-monospace, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
 }
 
-html {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+/* ============================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* Legacy aliases kept so any stray var() reference still resolves. */
+    --background: var(--color-canvas);
+    --foreground: var(--color-ink);
+    --primary: var(--color-teal);
+    --secondary: var(--color-gold);
+    --accent: var(--color-aqua);
+    --card: var(--color-surface-2);
+    --border: var(--color-line-2);
+    --error: var(--color-coral);
+    --success: var(--color-teal);
+  }
+
+  html {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    min-height: 100vh;
+    letter-spacing: -0.011em;
+    font-feature-settings: "cv05" 1, "ss01" 1;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Blackout's focus treatment: a square accent frame, never a soft glow. */
+  :focus-visible {
+    outline: 1px solid var(--color-teal);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgba(44, 197, 160, 0.28);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(44, 197, 160, 0.45);
+  }
+
+  /* Numeric readouts never jitter. */
+  input[type="number"],
+  table,
+  time {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  min-height: 100vh;
-  letter-spacing: -0.01em;
+/* ============================================================================
+   TECHNICAL STRUCTURE
+   Grid, rails, seams and registration marks.
+   ========================================================================== */
+
+@layer components {
+  .bo-grid {
+    background-image:
+      linear-gradient(to right, var(--color-line-1) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-line-1) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: center top;
+  }
+
+  .bo-grid-fine {
+    background-image:
+      linear-gradient(to right, var(--color-line-1) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-line-1) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Vertical hairline rails pinned to a container's edges. */
+  .bo-rails {
+    position: relative;
+  }
+  .bo-rails::before,
+  .bo-rails::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--color-line-1);
+    pointer-events: none;
+  }
+  .bo-rails::before {
+    left: 0;
+  }
+  .bo-rails::after {
+    right: 0;
+  }
+
+  /* A small plus-shaped registration mark. */
+  .bo-mark {
+    position: relative;
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    flex: none;
+  }
+  .bo-mark::before,
+  .bo-mark::after {
+    content: "";
+    position: absolute;
+    background: var(--color-line-3);
+  }
+  .bo-mark::before {
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-50%);
+  }
+  .bo-mark::after {
+    top: 50%;
+    left: 0;
+    height: 1px;
+    width: 100%;
+    transform: translateY(-50%);
+  }
+  .bo-mark-accent::before,
+  .bo-mark-accent::after {
+    background: var(--color-teal);
+  }
+
+  /* ==========================================================================
+     SURFACES
+     Nearby dark or translucent fill, one quiet 1px edge, zero radius.
+     ======================================================================== */
+
+  .bo-panel {
+    position: relative;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-line-2);
+  }
+
+  .bo-panel-quiet {
+    position: relative;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-line-1);
+  }
+
+  .bo-panel-inset {
+    position: relative;
+    background: rgba(255, 255, 255, 0.022);
+    border: 1px solid var(--color-line-1);
+  }
+
+  .bo-panel-live {
+    position: relative;
+    background: var(--color-surface-2);
+    border: 1px solid rgba(44, 197, 160, 0.3);
+  }
+
+  /* The one sanctioned elevation, for overlays and the focused artifact. */
+  .bo-lift {
+    box-shadow:
+      0 0 0 1px var(--color-line-2),
+      0 24px 64px -24px rgba(0, 0, 0, 0.9);
+  }
+
+  .bo-hover-row {
+    transition: background-color 140ms linear;
+  }
+  .bo-hover-row:hover {
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  /* ==========================================================================
+     TYPOGRAPHY
+     ======================================================================== */
+
+  .bo-display {
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+  }
+
+  .bo-heading {
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    line-height: 1.16;
+  }
+
+  /* Technical label: uppercase, wide tracking, tabular figures. */
+  .bo-label {
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-3);
+  }
+
+  .bo-label-sm {
+    font-size: 0.625rem;
+    line-height: 1;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-3);
+  }
+
+  .bo-num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .bo-code {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  /* ==========================================================================
+     ACTIONS
+     Compact, square, flat. State is carried by border and fill, not shadow.
+     ======================================================================== */
+
+  .bo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 140ms linear,
+      border-color 140ms linear,
+      color 140ms linear;
+  }
+  .bo-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .bo-btn-primary {
+    background: var(--color-teal);
+    color: #04140f;
+    border-color: var(--color-teal);
+    font-weight: 600;
+  }
+  .bo-btn-primary:hover:not(:disabled) {
+    background: #3ad9b2;
+    border-color: #3ad9b2;
+  }
+
+  .bo-btn-secondary {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-ink);
+    border-color: var(--color-line-2);
+  }
+  .bo-btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--color-line-3);
+  }
+
+  .bo-btn-ghost {
+    background: transparent;
+    color: var(--color-ink-2);
+    border-color: var(--color-line-2);
+  }
+  .bo-btn-ghost:hover:not(:disabled) {
+    color: var(--color-ink);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .bo-btn-gold {
+    background: transparent;
+    color: var(--color-gold);
+    border-color: rgba(242, 169, 0, 0.35);
+  }
+  .bo-btn-gold:hover:not(:disabled) {
+    background: rgba(242, 169, 0, 0.1);
+    border-color: rgba(242, 169, 0, 0.6);
+  }
+
+  .bo-btn-danger {
+    background: transparent;
+    color: var(--color-coral);
+    border-color: rgba(255, 92, 122, 0.3);
+  }
+  .bo-btn-danger:hover:not(:disabled) {
+    background: rgba(255, 92, 122, 0.1);
+    border-color: rgba(255, 92, 122, 0.55);
+  }
+
+  /* ==========================================================================
+     FORMS
+     ======================================================================== */
+
+  .bo-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--color-line-2);
+    color: var(--color-ink);
+    padding: 0.75rem 0.875rem;
+    font-size: 0.875rem;
+    transition:
+      border-color 140ms linear,
+      background-color 140ms linear;
+  }
+  .bo-field::placeholder {
+    color: var(--color-ink-4);
+  }
+  .bo-field:hover {
+    border-color: var(--color-line-3);
+  }
+  .bo-field:focus {
+    outline: none;
+    border-color: var(--color-teal);
+    background: rgba(44, 197, 160, 0.05);
+  }
+  .bo-field:focus-visible {
+    outline: none;
+  }
+
+  .bo-field-num {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Segmented control: square cells divided by hairlines. */
+  .bo-segment {
+    display: inline-flex;
+    border: 1px solid var(--color-line-2);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .bo-segment > button {
+    position: relative;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+    cursor: pointer;
+    transition:
+      color 140ms linear,
+      background-color 140ms linear;
+  }
+  .bo-segment > button + button {
+    border-left: 1px solid var(--color-line-2);
+  }
+  .bo-segment > button:hover {
+    color: var(--color-ink);
+  }
+  .bo-segment > button[data-active="true"] {
+    background: var(--color-teal);
+    color: #04140f;
+    font-weight: 600;
+  }
+
+  /* ==========================================================================
+     FEEDBACK
+     ======================================================================== */
+
+  .bo-note {
+    border: 1px solid var(--color-line-2);
+    background: rgba(255, 255, 255, 0.025);
+    border-left-width: 2px;
+  }
+  .bo-note-info {
+    border-left-color: var(--color-aqua);
+  }
+  .bo-note-warn {
+    border-left-color: var(--color-gold);
+  }
+  .bo-note-error {
+    border-left-color: var(--color-coral);
+  }
+  .bo-note-ok {
+    border-left-color: var(--color-teal);
+  }
+
+  .bo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--color-line-2);
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-3);
+  }
+  .bo-chip-ok {
+    color: var(--color-teal);
+    border-color: rgba(44, 197, 160, 0.35);
+    background: rgba(44, 197, 160, 0.07);
+  }
+  .bo-chip-gold {
+    color: var(--color-gold);
+    border-color: rgba(242, 169, 0, 0.3);
+    background: rgba(242, 169, 0, 0.07);
+  }
+  .bo-chip-warn {
+    color: var(--color-gold-soft);
+    border-color: rgba(242, 169, 0, 0.3);
+    background: rgba(242, 169, 0, 0.07);
+  }
+  .bo-chip-error {
+    color: var(--color-coral);
+    border-color: rgba(255, 92, 122, 0.3);
+    background: rgba(255, 92, 122, 0.07);
+  }
+
+  /* A live status dot that pulses without drawing attention to itself. */
+  .bo-pulse {
+    position: relative;
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--color-teal);
+    flex: none;
+  }
+  .bo-pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-teal);
+    animation: bo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* The gold rule inside the Chamba mark. Kept in CSS rather than on the
+     element so print can swap it for a colour that survives on paper. */
+  .chamba-mark-accent {
+    stroke: var(--color-gold);
+  }
+
+  /* ==========================================================================
+     MEDIA
+     Photography joins the canvas rather than sitting on top of it.
+     ======================================================================== */
+
+  .bo-media {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-1);
+  }
+  .bo-media img {
+    filter: saturate(0.82) contrast(1.06) brightness(0.78);
+  }
+  .bo-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to top, rgba(6, 6, 12, 0.92) 0%, rgba(6, 6, 12, 0.18) 55%, rgba(6, 6, 12, 0.5) 100%);
+  }
 }
 
-button, a {
-  -webkit-tap-highlight-color: transparent;
+/* ============================================================================
+   MOTION
+   Short, linear, and fully surrendered when the viewer asks for stillness.
+   ========================================================================== */
+
+@keyframes bo-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
 }
 
-/* Custom warm scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #D8D4C8;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #B8B3A4;
+@keyframes bo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-/* Receipt paper styling */
-.receipt-paper {
-  position: relative;
-  background: #FFFFFF;
-  box-shadow: 0 10px 30px -8px rgba(16, 42, 42, 0.08), 0 4px 12px -4px rgba(16, 42, 42, 0.04);
+@keyframes bo-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
-.receipt-tear {
-  background-image: radial-gradient(circle at 10px 0, transparent 0, transparent 8px, #FFFFFF 8.5px);
-  background-size: 20px 20px;
-  background-repeat: repeat-x;
+.bo-enter {
+  animation: bo-enter 220ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
+
+.bo-sweep {
+  transform-origin: left;
+  animation: bo-sweep 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================================
+   PAPER
+   The product's whole purpose is a document someone can hand to a bank, so the
+   dark canvas is dropped entirely for print and the artifact returns to paper.
+   ========================================================================== */
 
 @media print {
-  body {
-    background: #FFFFFF !important;
-    color: #000000 !important;
+  :root {
+    color-scheme: light;
   }
-  .receipt-paper {
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0b0b0b !important;
+  }
+
+  nav,
+  header,
+  footer,
+  .print\:hidden,
+  .bo-print-hide {
+    display: none !important;
+  }
+
+  .bo-grid,
+  .bo-grid-fine,
+  .bo-media::after {
+    background-image: none !important;
+  }
+
+  .bo-rails::before,
+  .bo-rails::after {
+    display: none !important;
+  }
+
+  .bo-print-doc,
+  .bo-print-doc * {
+    background: transparent !important;
+    color: #0b0b0b !important;
+    border-color: #c9cfd4 !important;
     box-shadow: none !important;
-    border: 1px solid #CBD5E1 !important;
+  }
+
+  .bo-print-doc {
+    border: 1px solid #c9cfd4 !important;
     page-break-inside: avoid;
   }
-  nav, footer, .print\:hidden {
-    display: none !important;
+
+  .bo-print-doc .bo-print-accent,
+  .bo-print-doc .bo-print-accent * {
+    color: #075e54 !important;
+  }
+
+  .chamba-mark-accent {
+    stroke: #075e54 !important;
+  }
+
+  .bo-print-doc .bo-mark::before,
+  .bo-print-doc .bo-mark::after {
+    background: #9aa4ab !important;
+  }
+
+  .bo-print-doc .bo-media img {
+    filter: none !important;
+  }
+
+  a[href]::after {
+    content: "";
   }
 }

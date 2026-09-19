@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="96" height="96" fill="none">
+  <title>Chamba Receipts</title>
+  <path d="M4.75 3.75h14.5v15.25l-1.8 1.9-1.82-1.9-1.81 1.9-1.82-1.9-1.81 1.9-1.82-1.9-1.81 1.9-1.8-1.9z"
+        stroke="#2CC5A0" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8 8.75h8M8 12.25h8" stroke="#2CC5A0" stroke-width="1.5" stroke-linecap="square"/>
+  <path d="M8 15.75h4.5" stroke="#F2A900" stroke-width="1.5" stroke-linecap="square"/>
+</svg>

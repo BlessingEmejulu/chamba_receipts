@@ -12,17 +12,16 @@ import {
   MonthlyBreakdownItem,
 } from "@/lib/storage";
 import { formatAmount, shortAddress } from "@/lib/stellar";
+import { Mark, Corners, Eyebrow } from "@/components/blackout";
+import { ChambaMark } from "@/components/ChambaMark";
 import {
   FileText,
   Printer,
   ShieldCheck,
   AlertCircle,
-  Sparkles,
-  Receipt,
-  BadgeCheck,
-  CheckCircle2,
+  ArrowRight,
   RefreshCw,
-  Wallet,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function IncomeReportPage() {
@@ -82,234 +81,231 @@ export default function IncomeReportPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#075E54]/10 text-[#075E54] mb-6">
-          <FileText className="h-8 w-8 text-[#075E54]" />
-        </div>
-        <h1 className="font-heading text-3xl font-black tracking-tight text-[#102A2A]">
-          Sign In to View Income Reports
-        </h1>
-        <p className="mt-3 text-sm text-[#5F6F6D] leading-relaxed">
-          Connect your Pollar wallet to generate certified income verification reports for lenders, banks, or housing applications.
+      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <span className="flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-2">
+          <FileText className="h-5 w-5 text-teal" aria-hidden="true" />
+        </span>
+        <h1 className="bo-display mt-7 text-3xl text-ink">Sign in to view statements</h1>
+        <p className="mt-4 text-sm leading-relaxed text-ink-2">
+          Connect your Pollar wallet to generate certified income verification reports for
+          lenders, banks, or housing applications.
         </p>
         <button
           onClick={login}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+          className="bo-btn bo-btn-primary mt-8 px-6 py-3.5 text-xs uppercase tracking-[0.1em]"
         >
-          <Sparkles className="h-4 w-4 text-[#F2A900]" />
-          <span>Connect Pollar Wallet</span>
+          <span>Connect Pollar wallet</span>
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     );
   }
 
   const workerName =
-    user?.displayName || user?.email || (user?.address ? shortAddress(user.address, 6, 6) : "Independent Worker");
+    user?.displayName ||
+    user?.email ||
+    (user?.address ? shortAddress(user.address, 6, 6) : "Independent Worker");
 
-  const reportDate = new Date().toLocaleDateString("en-US", {
-    dateStyle: "long",
-  });
+  const reportDate = new Date().toLocaleDateString("en-US", { dateStyle: "long" });
+
+  const kpis = [
+    {
+      label: "Total verified income",
+      value: `$${formatAmount(stats.totalUsdc)}${stats.totalXlm > 0 ? ` + ${formatAmount(stats.totalXlm)} XLM` : ""}`,
+      tone: "text-teal",
+    },
+    { label: "Total invoices paid", value: String(stats.paymentCount), tone: "text-ink" },
+    { label: "Average payment", value: `$${formatAmount(stats.averagePaymentUsdc)}`, tone: "text-ink" },
+    {
+      label: "This month",
+      value: `$${formatAmount(stats.thisMonthUsdc)}${stats.thisMonthXlm > 0 ? ` + ${formatAmount(stats.thisMonthXlm)} XLM` : ""}`,
+      tone: "text-aqua",
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 w-full">
-      {/* Header Bar (Hidden in Print) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#075E54]/10 pb-6 mb-8 print:hidden">
+    <div className="bo-rails mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* Control bar -- screen only */}
+      <div className="flex flex-col gap-6 border-b border-line-2 pb-8 sm:flex-row sm:items-end sm:justify-between print:hidden">
         <div>
-          <div className="inline-flex items-center gap-2 text-xs font-bold text-[#075E54] uppercase tracking-wider mb-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#16A085]" />
-            Official Financial Statement
-          </div>
-          <h1 className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A]">
+          <Eyebrow>Official financial statement</Eyebrow>
+          <h1 className="bo-display mt-5 text-3xl text-ink sm:text-4xl">
             Your progress, in numbers.
           </h1>
-          <p className="text-sm text-[#5F6F6D] mt-1">
-            Small payments. Real progress. Certified record of earnings backed by non-custodial Stellar on-chain settlements.
+          <p className="mt-3 max-w-lg text-sm text-ink-2">
+            A certified record of earnings backed by non-custodial Stellar settlements.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={handleSync}
             disabled={isSyncing || balanceLoading}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-3 text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
+            className="bo-btn bo-btn-ghost shrink-0 px-4 py-3 text-xs uppercase tracking-[0.1em]"
             title="Fetch latest on-chain transactions from Stellar Horizon"
           >
-            <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing || balanceLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 text-teal ${isSyncing || balanceLoading ? "animate-spin" : ""}`} />
             <span>{isSyncing ? "Syncing..." : "Sync On-Chain"}</span>
           </button>
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] transition-all cursor-pointer"
+            className="bo-btn bo-btn-primary shrink-0 px-5 py-3 text-xs uppercase tracking-[0.1em]"
           >
-            <Printer className="h-4 w-4" />
-            <span>Print Official Statement</span>
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            <span>Print statement</span>
           </button>
         </div>
       </div>
 
-      {/* Printable Report Document Card */}
-      <div className="rounded-3xl border border-[#075E54]/20 bg-white p-6 sm:p-10 shadow-lg print:border-none print:shadow-none print:p-0">
-        {/* Document Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-6 mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#075E54] text-white shadow-sm">
-              <Receipt className="h-6 w-6 text-[#F2A900]" />
-            </div>
+      <p className="mt-6 flex items-start gap-3 text-2xs leading-relaxed text-ink-3 print:hidden">
+        <Mark />
+        <span>
+          Printing renders this statement as a clean black-on-white document. The dark
+          interface is dropped entirely so the page reads as official paper.
+        </span>
+      </p>
+
+      {/* The document */}
+      <article className="bo-panel bo-print-doc relative mt-6 p-6 sm:p-10 print:mt-0 print:p-0">
+        <Corners />
+
+        {/* Masthead */}
+        <header className="flex flex-col gap-5 border-b border-line-2 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-line-2 bg-surface-3">
+              <ChambaMark className="h-6 w-6 text-teal bo-print-accent" />
+            </span>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-lg font-black tracking-tight text-[#102A2A]">
-                  CHAMBA RECEIPTS
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="bo-heading text-base font-semibold uppercase tracking-[0.18em] text-ink">
+                  Chamba Receipts
                 </span>
-                <span className="rounded-full bg-[#16A085]/15 px-2.5 py-0.5 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
-                  OFFICIAL RECORD
-                </span>
+                <span className="bo-chip bo-chip-ok bo-print-accent">Official record</span>
               </div>
-              <p className="text-xs text-[#5F6F6D] font-medium mt-0.5">
-                Proof of Professional Income & Payment Activity
+              <p className="bo-label-sm mt-2">
+                Proof of professional income &amp; payment activity
               </p>
             </div>
           </div>
 
-          <div className="text-left sm:text-right text-xs text-[#5F6F6D]">
-            <div>Report Certified: <span className="font-bold text-[#102A2A]">{reportDate}</span></div>
-            <div>Account: <span className="font-mono text-[#075E54] font-semibold">{shortAddress(user?.address || "", 8, 6)}</span></div>
+          <dl className="space-y-1.5 text-left sm:text-right">
+            <div>
+              <dt className="bo-label-sm inline">Certified&nbsp;</dt>
+              <dd className="bo-num inline text-xs font-medium text-ink">{reportDate}</dd>
+            </div>
+            <div>
+              <dt className="bo-label-sm inline">Account&nbsp;</dt>
+              <dd className="bo-code inline text-xs text-teal bo-print-accent">
+                {shortAddress(user?.address || "", 8, 6)}
+              </dd>
+            </div>
             {lastSynced && (
-              <div className="text-2xs text-emerald-700 font-medium">Ledger verified &bull; Stellar Horizon</div>
+              <div className="text-2xs text-teal font-medium">Ledger verified &bull; Stellar Horizon</div>
             )}
+          </dl>
+        </header>
+
+        {/* Beneficiary block */}
+        <div className="bo-panel-inset mt-8 grid grid-cols-1 gap-6 p-5 sm:grid-cols-4">
+          <div>
+            <div className="bo-label-sm">Beneficiary name</div>
+            <div className="mt-2 text-sm font-medium text-ink">{workerName}</div>
+          </div>
+          <div className="min-w-0">
+            <div className="bo-label-sm">Stellar public key</div>
+            <div className="bo-code mt-2 select-all break-all text-2xs text-ink-2">
+              {user?.address}
+            </div>
+          </div>
+          <div>
+            <div className="bo-label-sm">Wallet balance</div>
+            <div className="mt-2 text-xs font-medium text-ink">
+              {formatAmount(usdcBalance)} USDC &bull; {formatAmount(xlmBalance)} XLM
+            </div>
+          </div>
+          <div>
+            <div className="bo-label-sm">Settlement rail</div>
+            <div className="mt-2 flex items-center gap-2 text-sm text-teal bo-print-accent">
+              <Mark accent />
+              Pollar &middot; Stellar ledger
+            </div>
           </div>
         </div>
 
-        {/* Worker Summary Box */}
-        <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-5 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="text-[#5F6F6D] block font-medium">Beneficiary Name</span>
-              <span className="font-heading text-sm font-bold text-[#102A2A]">{workerName}</span>
+        {/* KPI band */}
+        <div className="mt-8 grid grid-cols-2 gap-px bg-line-2 sm:grid-cols-4 print:gap-4 print:bg-transparent">
+          {kpis.map((k) => (
+            <div key={k.label} className="bg-surface-2 p-5 print:border print:p-4">
+              <div className="bo-label-sm leading-relaxed">{k.label}</div>
+              <div className={`bo-display bo-num mt-4 text-2xl ${k.tone}`}>{k.value}</div>
             </div>
-            <div>
-              <span className="text-[#5F6F6D] block font-medium">Stellar Public Key</span>
-              <span className="font-mono text-2xs text-[#102A2A] select-all break-all">{user?.address}</span>
-            </div>
-            <div>
-              <span className="text-[#5F6F6D] block font-medium">Current Non-Custodial Wallet</span>
-              <span className="font-bold text-[#102A2A] block mt-0.5">
-                {formatAmount(usdcBalance)} USDC &bull; {formatAmount(xlmBalance)} XLM
-              </span>
-            </div>
-            <div>
-              <span className="text-[#5F6F6D] block font-medium">Settlement Rail</span>
-              <span className="font-bold text-[#075E54] flex items-center gap-1 mt-0.5">
-                <BadgeCheck className="h-3.5 w-3.5 text-[#16A085]" />
-                Pollar &bull; Stellar Ledger
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Aggregate KPI Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
-            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Total Verified Income
-            </span>
-            <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
-              ${formatAmount(stats.totalUsdc)}
-            </div>
-            {stats.totalXlm > 0 && (
-              <span className="text-xs text-[#5F6F6D] font-medium block mt-0.5">
-                + {formatAmount(stats.totalXlm)} XLM
-              </span>
-            )}
+        {/* Monthly breakdown */}
+        <section className="mt-10">
+          <div className="flex items-center gap-3">
+            <Mark accent />
+            <h2 className="bo-label text-ink">Monthly earnings breakdown</h2>
+            <span className="h-px flex-1 bg-line-1" aria-hidden="true" />
           </div>
-
-          <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
-            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Confirmed Receipts
-            </span>
-            <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
-              {stats.paymentCount}
-            </div>
-            <span className="text-2xs text-[#5F6F6D] font-medium block mt-0.5">
-              On-chain receipts
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
-            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Average Ticket
-            </span>
-            <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
-              ${formatAmount(stats.averagePaymentUsdc)}
-            </div>
-            <span className="text-2xs text-[#5F6F6D] font-medium block mt-0.5">
-              Per confirmed receipt
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
-            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              This Month
-            </span>
-            <div className="font-heading text-2xl font-black text-[#075E54] mt-1.5">
-              ${formatAmount(stats.thisMonthUsdc)}
-            </div>
-            {stats.thisMonthXlm > 0 && (
-              <span className="text-xs text-[#5F6F6D] font-medium block mt-0.5">
-                + {formatAmount(stats.thisMonthXlm)} XLM
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Monthly Breakdown Table */}
-        <div className="mb-8">
-          <h2 className="font-heading text-base font-bold text-[#102A2A] mb-3">
-            Monthly Earnings Breakdown
-          </h2>
 
           {breakdown.length === 0 ? (
-            <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-8 text-center">
-              <AlertCircle className="h-6 w-6 text-[#5F6F6D] mx-auto mb-2" />
-              <p className="font-heading text-sm font-bold text-[#102A2A]">
-                {isSyncing ? "Syncing on-chain payments from Stellar ledger..." : "Receive your first payment to start building your verified income history."}
+            <div className="bo-panel-inset mt-5 p-8 text-center">
+              <AlertCircle className="mx-auto h-5 w-5 text-ink-3" aria-hidden="true" />
+              <p className="bo-heading mt-4 text-sm font-medium text-ink">
+                {isSyncing
+                  ? "Syncing on-chain payments from Stellar ledger..."
+                  : "Receive your first payment to start building your verified income history."}
               </p>
               <Link
                 href="/receive"
-                className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#075E54] hover:underline print:hidden"
+                className="mt-4 inline-block text-xs font-medium uppercase tracking-[0.1em] text-teal hover:underline print:hidden"
               >
-                <span>Create a payment request</span>
+                Create a payment request
               </Link>
             </div>
           ) : (
-            <div className="rounded-2xl border border-[#075E54]/15 overflow-hidden">
+            <div className="mt-5 border border-line-2 print:border-0">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-[#075E54]/10 bg-[#F8F7F2] text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
+                <thead className="border-b border-line-2 bg-surface-1 print:bg-transparent">
                   <tr>
-                    <th className="px-5 py-3">Month</th>
-                    <th className="px-5 py-3 text-center">Paid Receipts</th>
-                    <th className="px-5 py-3 text-right">USDC Earned</th>
-                    {stats.totalXlm > 0 && <th className="px-5 py-3 text-right">XLM Earned</th>}
-                    <th className="px-5 py-3 text-right">Verification</th>
+                    <th scope="col" className="bo-label-sm px-5 py-3.5">
+                      Month
+                    </th>
+                    <th scope="col" className="bo-label-sm px-5 py-3.5 text-center">
+                      Invoices
+                    </th>
+                    <th scope="col" className="bo-label-sm px-5 py-3.5 text-right">
+                      USDC total
+                    </th>
+                    {stats.totalXlm > 0 && (
+                      <th scope="col" className="bo-label-sm px-5 py-3.5 text-right">
+                        XLM total
+                      </th>
+                    )}
+                    <th scope="col" className="bo-label-sm px-5 py-3.5 text-right">
+                      Verification
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-800">
+                <tbody className="divide-y divide-line-1">
                   {breakdown.map((item) => (
-                    <tr key={item.monthKey} className="hover:bg-[#F8F7F2]/50">
-                      <td className="px-5 py-3.5 font-bold text-[#102A2A]">{item.monthName}</td>
-                      <td className="px-5 py-3.5 text-center font-medium">{item.count}</td>
-                      <td className="px-5 py-3.5 text-right font-mono font-bold text-[#102A2A]">
+                    <tr key={item.monthKey} className="bo-hover-row">
+                      <td className="px-5 py-3.5 font-medium text-ink">{item.monthName}</td>
+                      <td className="bo-num px-5 py-3.5 text-center text-ink-2">
+                        {item.count}
+                      </td>
+                      <td className="bo-num px-5 py-3.5 text-right font-medium text-ink">
                         ${formatAmount(item.totalUsdc)}
                       </td>
                       {stats.totalXlm > 0 && (
-                        <td className="px-5 py-3.5 text-right font-mono text-[#5F6F6D]">
-                          {formatAmount(item.totalXlm)} XLM
+                        <td className="bo-num px-5 py-3.5 text-right text-ink-2">
+                          {formatAmount(item.totalXlm)}
                         </td>
                       )}
                       <td className="px-5 py-3.5 text-right">
-                        <span className="inline-flex items-center gap-1 text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          <CheckCircle2 className="h-3 w-3" />
-                          On-Chain
-                        </span>
+                        <span className="bo-chip bo-chip-ok text-[10px]">On-Chain</span>
                       </td>
                     </tr>
                   ))}
@@ -317,21 +313,23 @@ export default function IncomeReportPage() {
               </table>
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Verification Guarantee Footer */}
-        <div className="border-t border-[#075E54]/15 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#5F6F6D]">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[#16A085] shrink-0" />
-            <span>
-              Transactions verified with cryptographic proof on the decentralized Stellar Horizon ledger.
+        {/* Attestation */}
+        <footer className="mt-10 flex flex-col gap-4 border-t border-line-2 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <ShieldCheck
+              className="mt-0.5 h-4 w-4 shrink-0 text-teal bo-print-accent"
+              aria-hidden="true"
+            />
+            <span className="text-2xs leading-relaxed text-ink-2">
+              Transactions carry cryptographic proof on the public Stellar decentralised
+              ledger and can be independently verified by any third party.
             </span>
           </div>
-          <div className="font-mono text-2xs text-[#5F6F6D]">
-            CHAMBA-AUDIT-V1
-          </div>
-        </div>
-      </div>
+          <span className="bo-code bo-label-sm shrink-0">CHAMBA-AUDIT-V1</span>
+        </footer>
+      </article>
     </div>
   );
 }

@@ -23,7 +23,7 @@ import {
 export function Navbar() {
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading, login, logout } = usePollarAuth();
-  const { balance, currency } = useBalance();
+  const { balance, currency, usdcBalance, xlmBalance } = useBalance();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -84,7 +84,13 @@ export function Navbar() {
               <div className="hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-[#075E54]/20 bg-white shadow-2xs text-xs">
                 <div className="flex items-center gap-1.5 text-[#102A2A] font-semibold">
                   <Wallet className="h-3.5 w-3.5 text-[#075E54]" />
-                  <span>{formatAmount(balance)} {currency}</span>
+                  <span>
+                    {parseFloat(usdcBalance) > 0
+                      ? `${formatAmount(usdcBalance)} USDC`
+                      : parseFloat(xlmBalance) > 0
+                      ? `${formatAmount(xlmBalance)} XLM`
+                      : `0.00 USDC`}
+                  </span>
                 </div>
                 <span className="h-3.5 w-px bg-[#075E54]/15" />
                 <span className="font-mono text-[#5F6F6D] text-2xs" title={user.address}>

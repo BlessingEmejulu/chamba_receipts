@@ -1,5 +1,7 @@
 "use client";
 
+import { fetchAccountIncomingPayments, fetchTransactionMemo, shortAddress } from "./stellar";
+
 /**
  * Storage and Data Modeling Layer for Chamba Receipts
  */
@@ -136,6 +138,109 @@ export function savePaymentRecord(record: PaymentRecord): void {
     all.unshift(record);
   }
   safeSetItem(PAYMENTS_KEY, all);
+}
+
+/**
+ * Synchronizes confirmed on-chain incoming payments from Stellar Horizon
+ * into the application's local storage and state.
+ *
+ * This bridges the cross-device / cross-session gap on Vercel:
+ * Even if a payment was executed by a customer on a different phone or laptop,
+ * the worker's device queries the immutable Stellar blockchain directly to reflect
+ * all received payments and balances on the dashboard and statements.
+ */
+export async function syncOnChainPayments(workerAddress?: string): Promise<PaymentRecord[]> {
+  if (!workerAddress) return listPaymentRecords();
+  const cleanAddr = workerAddress.trim();
+
+  try {
+    const incomingOps = await fetchAccountIncomingPayments(cleanAddr, 50);
+    if (!incomingOps || incomingOps.length === 0) {
+      return listPaymentRecords(cleanAddr);
+    }
+
+    const currentRecords = safeGetItem<PaymentRecord[]>(PAYMENTS_KEY, []);
+    const localRequests = listPaymentRequests(cleanAddr);
+    let changed = false;
+
+    // Track existing transaction hashes in storage
+    const existingHashes = new Set(
+      currentRecords.map((r) => (r.transactionId || "").toLowerCase())
+    );
+
+    // Filter only new transactions that aren't stored locally yet
+    const newOps = incomingOps.filter(
+      (op) => !existingHashes.has(op.txHash.toLowerCase())
+    );
+
+    for (const op of newOps) {
+      // 1. Attempt to fetch on-chain memo for receipt identifier
+      const txMemo = await fetchTransactionMemo(op.txHash);
+
+      // 2. Check if a local payment request matches this payment
+      const matchedReq = localRequests.find((req) => {
+        if (txMemo && req.memo.toUpperCase() === txMemo.toUpperCase()) return true;
+        if (txMemo && req.id.toUpperCase() === txMemo.toUpperCase()) return true;
+        return (
+          req.status === "pending" &&
+          req.currency === op.currency &&
+          Math.abs(parseFloat(req.amount) - parseFloat(op.amount)) < 0.001
+        );
+      });
+
+      const memoVal = txMemo || matchedReq?.memo || `CR-${op.txHash.slice(0, 6).toUpperCase()}`;
+      const receiptId =
+        txMemo && txMemo.startsWith("CR-")
+          ? txMemo
+          : matchedReq?.confirmedPaymentId || `CR-${op.txHash.slice(0, 6).toUpperCase()}`;
+
+      const desc =
+        matchedReq?.description ||
+        (op.type === "create_account"
+          ? "Account Initialization"
+          : `Direct Payment Received (${op.currency})`);
+
+      const record: PaymentRecord = {
+        id: receiptId,
+        paymentRequestId: matchedReq?.id || `REQ-${op.txHash.slice(0, 6).toUpperCase()}`,
+        transactionId: op.txHash,
+        workerAddress: cleanAddr,
+        workerName: matchedReq?.workerName || undefined,
+        payerAddress: op.payerAddress || undefined,
+        payerName:
+          matchedReq?.customerName ||
+          (op.payerAddress ? shortAddress(op.payerAddress) : "Stellar Customer"),
+        description: desc,
+        amount: op.amount,
+        currency: op.currency,
+        status: "successful",
+        memo: memoVal,
+        createdAt: op.createdAt,
+        paidAt: op.createdAt,
+      };
+
+      currentRecords.unshift(record);
+      existingHashes.add(op.txHash.toLowerCase());
+      changed = true;
+
+      if (matchedReq && matchedReq.status !== "successful") {
+        updatePaymentRequestStatus(matchedReq.id, "successful", receiptId);
+      }
+    }
+
+    if (changed) {
+      // Sort newest first
+      currentRecords.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      safeSetItem(PAYMENTS_KEY, currentRecords);
+    }
+
+    return listPaymentRecords(cleanAddr);
+  } catch (err) {
+    console.error("Error syncing on-chain payments from Horizon:", err);
+    return listPaymentRecords(cleanAddr);
+  }
 }
 
 // ================= Statistics & Aggregations =================

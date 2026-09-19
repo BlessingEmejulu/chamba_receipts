@@ -317,4 +317,207 @@ export async function checkHasTrustline(
   }
 }
 
+export interface AccountBalancesResult {
+  usdc: string;
+  xlm: string;
+  hasUsdcTrustline: boolean;
+  balances: Array<{ code: string; balance: string; type: string; issuer?: string }>;
+}
+
+/**
+ * Fetches real-time on-chain balances directly from Stellar Horizon for any Stellar address.
+ * Completely independent of local session cache; works on Vercel, localhost, mobile, etc.
+ */
+export async function fetchAccountBalances(address: string): Promise<AccountBalancesResult> {
+  const clean = (address || "").trim();
+  const defaultRes: AccountBalancesResult = {
+    usdc: "0.00",
+    xlm: "0.00",
+    hasUsdcTrustline: false,
+    balances: [],
+  };
+
+  if (!looksLikeAddress(clean)) return defaultRes;
+
+  const horizon = getHorizonUrl();
+  const issuer = getUsdcIssuer();
+
+  try {
+    const res = await fetch(`${horizon}/accounts/${clean}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      // 404 means the account is not yet funded on the Stellar network
+      return defaultRes;
+    }
+
+    const data = await res.json();
+    const raw = Array.isArray(data.balances) ? data.balances : [];
+
+    let usdc = "0.00";
+    let xlm = "0.00";
+    let hasUsdc = false;
+
+    const list = raw.map(
+      (b: { balance?: string; asset_type?: string; asset_code?: string; asset_issuer?: string }) => {
+        const bal = b.balance || "0";
+        const isNative = b.asset_type === "native";
+        const code = isNative ? "XLM" : b.asset_code || "UNKNOWN";
+
+        if (isNative) {
+          xlm = bal;
+        }
+        if (code === "USDC" && (!issuer || b.asset_issuer === issuer)) {
+          usdc = bal;
+          hasUsdc = true;
+        }
+
+        return {
+          code,
+          balance: bal,
+          type: isNative ? "native" : "credit",
+          issuer: b.asset_issuer,
+        };
+      }
+    );
+
+    return {
+      usdc,
+      xlm,
+      hasUsdcTrustline: hasUsdc,
+      balances: list,
+    };
+  } catch {
+    return defaultRes;
+  }
+}
+
+export interface HorizonIncomingPayment {
+  txHash: string;
+  type: string;
+  amount: string;
+  currency: "USDC" | "XLM";
+  payerAddress: string;
+  createdAt: string;
+}
+
+/**
+ * Fetches transaction memo from Horizon by tx hash.
+ */
+export async function fetchTransactionMemo(hash: string): Promise<string | null> {
+  const clean = hash.trim().toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(clean)) return null;
+
+  const horizon = getHorizonUrl();
+  try {
+    const res = await fetch(`${horizon}/transactions/${clean}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.memo || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetches all incoming payments for an account directly from Stellar Horizon.
+ * Enables live syncing across different devices, sessions, or Vercel deployments.
+ */
+export async function fetchAccountIncomingPayments(
+  address: string,
+  limit = 50
+): Promise<HorizonIncomingPayment[]> {
+  const clean = (address || "").trim();
+  if (!looksLikeAddress(clean)) return [];
+
+  const horizon = getHorizonUrl();
+  const issuer = getUsdcIssuer();
+
+  try {
+    const res = await fetch(
+      `${horizon}/accounts/${clean}/payments?order=desc&limit=${limit}`,
+      {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    const records = Array.isArray(data?._embedded?.records) ? data._embedded.records : [];
+
+    const incomingOps = records.filter(
+      (op: {
+        type?: string;
+        transaction_successful?: boolean;
+        to?: string;
+        account?: string;
+        funder?: string;
+      }) => {
+        if (op.transaction_successful === false) return false;
+
+        // Skip testnet Friendbot faucet operations from showing as customer payments
+        if (op.funder === "GAIH3ULLFQ4DGSECF2AR555KZ4KNDGEKN4AFI4SU2M7B43MGK3QJZNSR") {
+          return false;
+        }
+
+        // Standard payment directed to this address
+        if (
+          (op.type === "payment" ||
+            op.type === "path_payment_strict_send" ||
+            op.type === "path_payment_strict_receive") &&
+          op.to?.toLowerCase() === clean.toLowerCase()
+        ) {
+          return true;
+        }
+
+        // Account creation funding directed to this address (from non-faucet funder)
+        if (
+          op.type === "create_account" &&
+          op.account?.toLowerCase() === clean.toLowerCase()
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+    );
+
+    const results: HorizonIncomingPayment[] = [];
+
+    for (const op of incomingOps) {
+      const isCreateAccount = op.type === "create_account";
+      const isNative = isCreateAccount || op.asset_type === "native";
+      const isUsdc =
+        !isNative && op.asset_code === "USDC" && (!issuer || op.asset_issuer === issuer);
+
+      // Only track USDC and XLM payments
+      if (!isNative && !isUsdc) continue;
+
+      const currency: "USDC" | "XLM" = isNative ? "XLM" : "USDC";
+      const rawAmt = isCreateAccount ? op.starting_balance : op.amount;
+      const parsedAmt = parseFloat(rawAmt || "0");
+      if (isNaN(parsedAmt) || parsedAmt <= 0) continue;
+
+      results.push({
+        txHash: op.transaction_hash,
+        type: op.type,
+        amount: parsedAmt.toFixed(2),
+        currency,
+        payerAddress: op.from || op.funder || "",
+        createdAt: op.created_at || new Date().toISOString(),
+      });
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePollarAuth } from "@/hooks/usePollarAuth";
+import { useBalance } from "@/hooks/useBalance";
 import {
   getDashboardStats,
   getMonthlyBreakdown,
+  syncOnChainPayments,
   DashboardStats,
   MonthlyBreakdownItem,
 } from "@/lib/storage";
@@ -19,10 +21,14 @@ import {
   Receipt,
   BadgeCheck,
   CheckCircle2,
+  RefreshCw,
+  Wallet,
 } from "lucide-react";
 
 export default function IncomeReportPage() {
   const { user, isAuthenticated, login } = usePollarAuth();
+  const { usdcBalance, xlmBalance, refresh: refreshBalance, isLoading: balanceLoading } = useBalance();
+
   const [stats, setStats] = useState<DashboardStats>({
     totalUsdc: 0,
     totalXlm: 0,
@@ -33,19 +39,40 @@ export default function IncomeReportPage() {
     recentPayments: [],
   });
   const [breakdown, setBreakdown] = useState<MonthlyBreakdownItem[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     setStats(getDashboardStats(user?.address));
     setBreakdown(getMonthlyBreakdown(user?.address));
-  };
+  }, [user?.address]);
+
+  const handleSync = useCallback(async () => {
+    if (!user?.address) return;
+    setIsSyncing(true);
+    try {
+      await Promise.allSettled([
+        syncOnChainPayments(user.address),
+        refreshBalance(),
+      ]);
+      loadData();
+      setLastSynced(new Date());
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user?.address, refreshBalance, loadData]);
 
   useEffect(() => {
     loadData();
+    if (user?.address) {
+      void handleSync();
+    }
+
     if (typeof window !== "undefined") {
       window.addEventListener("storage_chamba_updated", loadData);
       return () => window.removeEventListener("storage_chamba_updated", loadData);
     }
-  }, [user?.address]);
+  }, [user?.address, loadData, handleSync]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -102,6 +129,15 @@ export default function IncomeReportPage() {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={handleSync}
+            disabled={isSyncing || balanceLoading}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-3 text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
+            title="Fetch latest on-chain transactions from Stellar Horizon"
+          >
+            <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing || balanceLoading ? "animate-spin" : ""}`} />
+            <span>{isSyncing ? "Syncing..." : "Sync On-Chain"}</span>
+          </button>
+          <button
             onClick={handlePrint}
             className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] transition-all cursor-pointer"
           >
@@ -137,12 +173,15 @@ export default function IncomeReportPage() {
           <div className="text-left sm:text-right text-xs text-[#5F6F6D]">
             <div>Report Certified: <span className="font-bold text-[#102A2A]">{reportDate}</span></div>
             <div>Account: <span className="font-mono text-[#075E54] font-semibold">{shortAddress(user?.address || "", 8, 6)}</span></div>
+            {lastSynced && (
+              <div className="text-2xs text-emerald-700 font-medium">Ledger verified &bull; Stellar Horizon</div>
+            )}
           </div>
         </div>
 
         {/* Worker Summary Box */}
         <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-5 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
             <div>
               <span className="text-[#5F6F6D] block font-medium">Beneficiary Name</span>
               <span className="font-heading text-sm font-bold text-[#102A2A]">{workerName}</span>
@@ -150,6 +189,12 @@ export default function IncomeReportPage() {
             <div>
               <span className="text-[#5F6F6D] block font-medium">Stellar Public Key</span>
               <span className="font-mono text-2xs text-[#102A2A] select-all break-all">{user?.address}</span>
+            </div>
+            <div>
+              <span className="text-[#5F6F6D] block font-medium">Current Non-Custodial Wallet</span>
+              <span className="font-bold text-[#102A2A] block mt-0.5">
+                {formatAmount(usdcBalance)} USDC &bull; {formatAmount(xlmBalance)} XLM
+              </span>
             </div>
             <div>
               <span className="text-[#5F6F6D] block font-medium">Settlement Rail</span>
@@ -165,29 +210,40 @@ export default function IncomeReportPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
             <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Total USDC Received
+              Total Verified Income
             </span>
             <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
               ${formatAmount(stats.totalUsdc)}
             </div>
+            {stats.totalXlm > 0 && (
+              <span className="text-xs text-[#5F6F6D] font-medium block mt-0.5">
+                + {formatAmount(stats.totalXlm)} XLM
+              </span>
+            )}
           </div>
 
           <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
             <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Total Invoices Paid
+              Confirmed Receipts
             </span>
             <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
               {stats.paymentCount}
             </div>
+            <span className="text-2xs text-[#5F6F6D] font-medium block mt-0.5">
+              On-chain receipts
+            </span>
           </div>
 
           <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
             <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D]">
-              Average Payment
+              Average Ticket
             </span>
             <div className="font-heading text-2xl font-black text-[#102A2A] mt-1.5">
               ${formatAmount(stats.averagePaymentUsdc)}
             </div>
+            <span className="text-2xs text-[#5F6F6D] font-medium block mt-0.5">
+              Per confirmed receipt
+            </span>
           </div>
 
           <div className="rounded-2xl border border-[#075E54]/15 p-4 bg-white shadow-2xs">
@@ -197,6 +253,11 @@ export default function IncomeReportPage() {
             <div className="font-heading text-2xl font-black text-[#075E54] mt-1.5">
               ${formatAmount(stats.thisMonthUsdc)}
             </div>
+            {stats.thisMonthXlm > 0 && (
+              <span className="text-xs text-[#5F6F6D] font-medium block mt-0.5">
+                + {formatAmount(stats.thisMonthXlm)} XLM
+              </span>
+            )}
           </div>
         </div>
 
@@ -210,7 +271,7 @@ export default function IncomeReportPage() {
             <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-8 text-center">
               <AlertCircle className="h-6 w-6 text-[#5F6F6D] mx-auto mb-2" />
               <p className="font-heading text-sm font-bold text-[#102A2A]">
-                Receive your first payment to start building your verified income history.
+                {isSyncing ? "Syncing on-chain payments from Stellar ledger..." : "Receive your first payment to start building your verified income history."}
               </p>
               <Link
                 href="/receive"
@@ -225,9 +286,10 @@ export default function IncomeReportPage() {
                 <thead className="border-b border-[#075E54]/10 bg-[#F8F7F2] text-xs font-bold uppercase tracking-wider text-[#5F6F6D]">
                   <tr>
                     <th className="px-5 py-3">Month</th>
-                    <th className="px-5 py-3 text-center">Paid Invoices</th>
-                    <th className="px-5 py-3 text-right">USDC Total</th>
-                    {stats.totalXlm > 0 && <th className="px-5 py-3 text-right">XLM Total</th>}
+                    <th className="px-5 py-3 text-center">Paid Receipts</th>
+                    <th className="px-5 py-3 text-right">USDC Earned</th>
+                    {stats.totalXlm > 0 && <th className="px-5 py-3 text-right">XLM Earned</th>}
+                    <th className="px-5 py-3 text-right">Verification</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -243,6 +305,12 @@ export default function IncomeReportPage() {
                           {formatAmount(item.totalXlm)} XLM
                         </td>
                       )}
+                      <td className="px-5 py-3.5 text-right">
+                        <span className="inline-flex items-center gap-1 text-2xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          <CheckCircle2 className="h-3 w-3" />
+                          On-Chain
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -256,7 +324,7 @@ export default function IncomeReportPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#16A085] shrink-0" />
             <span>
-              Transactions verified cryptographic proof on the public Stellar decentralized ledger.
+              Transactions verified with cryptographic proof on the decentralized Stellar Horizon ledger.
             </span>
           </div>
           <div className="font-mono text-2xs text-[#5F6F6D]">

@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { usePollarAuth } from "@/hooks/usePollarAuth";
-import { listPaymentRecords, exportPaymentsToCsv, PaymentRecord } from "@/lib/storage";
+import {
+  listPaymentRecords,
+  exportPaymentsToCsv,
+  syncOnChainPayments,
+  PaymentRecord,
+} from "@/lib/storage";
 import { formatAmount, shortAddress } from "@/lib/stellar";
 import {
   History,
@@ -16,6 +21,7 @@ import {
   Download,
   Sparkles,
   CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 
 export default function IncomeHistoryPage() {
@@ -23,11 +29,23 @@ export default function IncomeHistoryPage() {
   const [records, setRecords] = useState<PaymentRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("ALL");
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const loadRecords = () => {
+  const loadRecords = useCallback(() => {
     const list = listPaymentRecords(user?.address);
     setRecords(list);
-  };
+  }, [user?.address]);
+
+  const handleSync = useCallback(async () => {
+    if (!user?.address) return;
+    setIsSyncing(true);
+    try {
+      await syncOnChainPayments(user.address);
+      loadRecords();
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user?.address, loadRecords]);
 
   const handleExportCsv = () => {
     if (filteredRecords.length === 0) return;
@@ -43,11 +61,15 @@ export default function IncomeHistoryPage() {
 
   useEffect(() => {
     loadRecords();
+    if (user?.address) {
+      void handleSync();
+    }
+
     if (typeof window !== "undefined") {
       window.addEventListener("storage_chamba_updated", loadRecords);
       return () => window.removeEventListener("storage_chamba_updated", loadRecords);
     }
-  }, [user?.address]);
+  }, [user?.address, loadRecords, handleSync]);
 
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
@@ -115,6 +137,15 @@ export default function IncomeHistoryPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-4 py-3 text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
+            title="Fetch latest on-chain payments from Stellar Horizon"
+          >
+            <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing ? "animate-spin" : ""}`} />
+            <span>{isSyncing ? "Syncing..." : "Sync On-Chain"}</span>
+          </button>
           <Link
             href="/receive"
             className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all"
@@ -158,43 +189,72 @@ export default function IncomeHistoryPage() {
         {/* Currency Tabs */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="inline-flex rounded-xl border border-[#075E54]/15 bg-white p-1 text-xs font-bold shadow-2xs">
-            {["ALL", "USDC", "XLM"].map((c) => (
-              <button
-                key={c}
-                onClick={() => setSelectedCurrency(c)}
-                className={`rounded-lg px-3.5 py-1.5 transition-all cursor-pointer ${
-                  selectedCurrency === c
-                    ? "bg-[#075E54] text-white shadow-xs"
-                    : "text-[#5F6F6D] hover:text-[#102A2A]"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
+            <button
+              onClick={() => setSelectedCurrency("ALL")}
+              className={`px-3 py-1.5 rounded-lg transition-all ${
+                selectedCurrency === "ALL"
+                  ? "bg-[#075E54] text-white shadow-xs"
+                  : "text-[#5F6F6D] hover:text-[#102A2A]"
+              }`}
+            >
+              All Assets
+            </button>
+            <button
+              onClick={() => setSelectedCurrency("USDC")}
+              className={`px-3 py-1.5 rounded-lg transition-all ${
+                selectedCurrency === "USDC"
+                  ? "bg-[#075E54] text-white shadow-xs"
+                  : "text-[#5F6F6D] hover:text-[#102A2A]"
+              }`}
+            >
+              USDC Only
+            </button>
+            <button
+              onClick={() => setSelectedCurrency("XLM")}
+              className={`px-3 py-1.5 rounded-lg transition-all ${
+                selectedCurrency === "XLM"
+                  ? "bg-[#075E54] text-white shadow-xs"
+                  : "text-[#5F6F6D] hover:text-[#102A2A]"
+              }`}
+            >
+              XLM Only
+            </button>
           </div>
-
-          <span className="hidden sm:inline-block text-xs font-semibold text-[#5F6F6D]">
-            {filteredRecords.length} records
-          </span>
         </div>
       </div>
 
-      {/* Filter Total Summary Banner */}
-      <div className="mb-6 rounded-2xl border border-[#075E54]/15 bg-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-2xs">
-        <div className="text-xs text-[#5F6F6D] font-bold uppercase tracking-wider">
-          Filter Cumulative Total:
-        </div>
-        <div className="flex items-center gap-6 text-sm">
+      {/* Aggregate Overview Card */}
+      <div className="mb-6 rounded-2xl border border-[#075E54]/15 bg-white p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
           <div>
-            <span className="text-[#5F6F6D] text-xs mr-1.5">USDC Total:</span>
-            <span className="font-heading font-black text-[#102A2A] text-base">{formatAmount(totalUsdc)} USDC</span>
-          </div>
-          {totalXlm > 0 && (
-            <div>
-              <span className="text-[#5F6F6D] text-xs mr-1.5">XLM Total:</span>
-              <span className="font-heading font-black text-[#102A2A] text-base">{formatAmount(totalXlm)} XLM</span>
+            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D] block">
+              Filtered Volume
+            </span>
+            <div className="font-heading text-xl sm:text-2xl font-black text-[#102A2A] mt-0.5">
+              ${formatAmount(totalUsdc)} USDC
+              {totalXlm > 0 && (
+                <span className="text-sm font-bold text-[#5F6F6D] ml-2">
+                  + {formatAmount(totalXlm)} XLM
+                </span>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="h-8 w-px bg-[#075E54]/10 hidden sm:block" />
+
+          <div>
+            <span className="text-2xs font-bold uppercase tracking-wider text-[#5F6F6D] block">
+              Matching Records
+            </span>
+            <div className="font-heading text-xl sm:text-2xl font-black text-[#102A2A] mt-0.5">
+              {filteredRecords.length}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-xs text-[#5F6F6D] font-medium flex items-center gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-[#16A085]" />
+          <span>Synced directly with Stellar Horizon ledger</span>
         </div>
       </div>
 
@@ -206,18 +266,28 @@ export default function IncomeHistoryPage() {
               <Sparkles className="h-7 w-7 text-[#F2A900]" />
             </div>
             <h3 className="font-heading text-lg font-bold text-[#102A2A]">
-              Your first payment starts your story.
+              {isSyncing ? "Checking Stellar ledger for incoming payments..." : "Your first payment starts your story."}
             </h3>
             <p className="text-xs sm:text-sm text-[#5F6F6D] mt-2 max-w-sm mx-auto leading-relaxed">
               Your payment history will appear here once you receive your first client transfer.
             </p>
-            <Link
-              href="/receive"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46]"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Create Payment Request</span>
-            </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-2 rounded-xl border border-[#075E54]/20 bg-white px-5 py-3 text-xs sm:text-sm font-semibold text-[#102A2A] hover:bg-[#F8F7F2] transition-all shadow-2xs"
+              >
+                <RefreshCw className={`h-4 w-4 text-[#075E54] ${isSyncing ? "animate-spin" : ""}`} />
+                <span>Check Stellar Horizon</span>
+              </button>
+              <Link
+                href="/receive"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#075E54]/20 hover:bg-[#064e46]"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Create Payment Request</span>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-[#075E54]/10">
@@ -267,7 +337,7 @@ export default function IncomeHistoryPage() {
                       </div>
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#16A085]/15 px-2 py-0.5 text-2xs font-bold text-[#075E54] border border-[#16A085]/30">
                         <CheckCircle2 className="h-3 w-3 text-[#16A085]" />
-                        PAID
+                        CONFIRMED
                       </span>
                     </div>
 

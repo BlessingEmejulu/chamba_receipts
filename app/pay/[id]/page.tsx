@@ -23,17 +23,16 @@ import {
   looksLikeAddress,
   fundWithFriendbot,
 } from "@/lib/stellar";
+import { Mark, Corners } from "@/components/blackout";
+import { ChambaMark } from "@/components/ChambaMark";
 import {
-  Receipt,
   CheckCircle2,
   AlertCircle,
   Wallet,
   ShieldCheck,
   ArrowRight,
   Loader2,
-  Sparkles,
-  HeartHandshake,
-  Coins,
+  Plus,
 } from "lucide-react";
 
 function PaymentCheckoutContent({ requestId }: { requestId: string }) {
@@ -213,7 +212,7 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
           particleCount: 90,
           spread: 75,
           origin: { y: 0.6 },
-          colors: ["#075E54", "#F2A900", "#16A085", "#102A2A"],
+          colors: ["#2CC5A0", "#F2A900", "#46D5D0", "#FFFFFF"],
         });
       } catch {
         // ignore
@@ -234,26 +233,27 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-16">
-        <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
+        <Loader2 className="h-6 w-6 animate-spin text-teal" aria-label="Loading" />
       </div>
     );
   }
 
   if (!request) {
     return (
-      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-4">
-          <AlertCircle className="h-7 w-7" />
-        </div>
-        <h1 className="font-heading text-2xl font-bold text-[#102A2A]">Payment Request Not Found</h1>
-        <p className="text-xs text-[#5F6F6D] mt-1.5 max-w-xs mx-auto leading-relaxed">
-          The payment link you visited might be invalid, expired, or missing query parameters.
+      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <span className="flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-2">
+          <AlertCircle className="h-5 w-5 text-coral" aria-hidden="true" />
+        </span>
+        <h1 className="bo-display mt-7 text-2xl text-ink">Payment request not found</h1>
+        <p className="mt-4 text-sm leading-relaxed text-ink-3">
+          The payment link you visited may be invalid, expired, or missing its query
+          parameters.
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex items-center gap-1.5 text-xs font-bold text-[#075E54] hover:underline"
+          className="bo-btn bo-btn-ghost mt-8 px-5 py-3 text-xs uppercase tracking-[0.1em]"
         >
-          <span>Go to Chamba Receipts Home</span>
+          Go to Chamba Receipts
         </Link>
       </div>
     );
@@ -262,37 +262,40 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   // If already confirmed paid:
   if (confirmedReceiptId) {
     return (
-      <div className="mx-auto max-w-md px-4 py-12 w-full text-center">
-        <div className="rounded-3xl border border-[#075E54]/20 bg-white p-8 shadow-xl space-y-6 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#16A085]/15 text-[#075E54]">
-            <CheckCircle2 className="h-10 w-10 text-[#16A085]" />
+      <div className="mx-auto w-full max-w-md px-4 py-14">
+        <div className="bo-panel-live bo-enter relative p-8 text-center">
+          <Corners accent />
+
+          <span className="mx-auto flex h-14 w-14 items-center justify-center border border-teal/40 bg-teal/10">
+            <CheckCircle2 className="h-7 w-7 text-teal" aria-hidden="true" />
+          </span>
+
+          <span className="bo-chip bo-chip-ok mt-6">Payment complete &middot; verified</span>
+
+          <h1 className="bo-display mt-5 text-2xl text-ink sm:text-3xl">
+            Payment received. Another win.
+          </h1>
+          <p className="mt-3 text-sm font-medium text-teal">Your hard work just paid off.</p>
+
+          <div className="bo-panel-inset mt-6 px-4 py-5">
+            <div className="bo-display bo-num text-3xl text-ink">
+              {formatAmount(request.amount)}{" "}
+              <span className="bo-label-sm text-sm text-teal">{request.currency}</span>
+            </div>
+            <p className="mt-2 text-xs text-ink-2">{request.description}</p>
           </div>
 
-          <div>
-            <span className="inline-flex items-center rounded-full bg-[#16A085]/15 px-3 py-1 text-2xs font-bold text-[#075E54] border border-[#16A085]/30 mb-3">
-              PAYMENT COMPLETE &bull; ON-CHAIN VERIFIED
-            </span>
-            <h1 className="font-heading text-2xl sm:text-3xl font-black text-[#102A2A]">
-              Payment received. Another win!
-            </h1>
-            <p className="text-sm font-semibold text-[#075E54] mt-1">
-              Your hard work just paid off.
-            </p>
-            <p className="text-xs text-[#5F6F6D] mt-2">
-              {formatAmount(request.amount)} {request.currency} for &ldquo;{request.description}&rdquo;
-            </p>
-          </div>
-
-          <p className="text-xs text-[#5F6F6D] leading-relaxed">
-            This payment was confirmed on Stellar ledger. Your immutable digital proof of income has been issued.
+          <p className="mt-5 text-2xs leading-relaxed text-ink-3">
+            Confirmed on the Stellar ledger. Your immutable digital proof of income has
+            been issued.
           </p>
 
           <Link
             href={`/receipt/${confirmedReceiptId}`}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all"
+            className="bo-btn bo-btn-primary mt-7 w-full px-6 py-4 text-xs uppercase tracking-[0.12em]"
           >
-            <span>View Digital Receipt</span>
-            <ArrowRight className="h-4 w-4" />
+            <span>View digital receipt</span>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -300,138 +303,156 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-md px-3.5 sm:px-4 py-6 sm:py-10 md:py-12 w-full">
-      {/* Checkout Card */}
-      <div className="rounded-3xl border border-[#075E54]/20 bg-white p-5 sm:p-7 md:p-8 shadow-xl">
-        {/* Header Ribbon */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 sm:pb-5 mb-5 sm:mb-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#075E54] text-white">
-              <Receipt className="h-5 w-5 text-[#F2A900]" />
-            </div>
-            <div>
-              <span className="font-heading text-xs font-black tracking-wider text-[#102A2A] uppercase block leading-none">
-                CHAMBA CHECKOUT
-              </span>
-              <span className="text-[10px] text-[#5F6F6D] font-medium">Simple. Secure. Non-custodial.</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-[#16A085]/10 px-2.5 py-1 text-[11px] font-bold text-[#075E54] border border-[#16A085]/20 shrink-0">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#16A085] animate-pulse" />
-            <span>Pollar Verified</span>
-          </div>
-        </div>
+    <div className="mx-auto w-full max-w-md px-4 py-8 sm:py-14">
+      <div className="bo-panel relative p-5 sm:p-7">
+        <Corners />
 
-        {/* Worker & Amount */}
-        <div className="text-center pb-5 sm:pb-6 border-b border-slate-100">
-          <div className="text-xs text-[#5F6F6D] font-semibold uppercase tracking-wider">Paying Directly To</div>
-          <div className="font-heading text-lg font-bold text-[#102A2A] mt-1 truncate">
+        {/* Header */}
+        <header className="flex items-center justify-between gap-4 border-b border-line-2 pb-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-line-2 bg-surface-3">
+              <ChambaMark className="h-5 w-5 text-teal" />
+            </span>
+            <div>
+              <span className="bo-heading block text-xs font-semibold uppercase tracking-[0.2em] text-ink">
+                Chamba Checkout
+              </span>
+              <span className="bo-label-sm mt-1.5 block">Simple &middot; non-custodial</span>
+            </div>
+          </div>
+          <span className="bo-chip bo-chip-ok shrink-0">
+            <span className="bo-pulse" aria-hidden="true" />
+            Pollar
+          </span>
+        </header>
+
+        {/* Payee & amount */}
+        <div className="border-b border-line-2 py-6 text-center">
+          <div className="bo-label-sm">Paying directly to</div>
+          <div className="bo-heading mt-2.5 truncate text-lg font-medium text-ink">
             {request.workerName || "Independent Worker"}
           </div>
-          <div className="text-[10px] sm:text-2xs font-mono text-[#5F6F6D] mt-0.5">
+          <div className="bo-code mt-1.5 text-2xs text-ink-3">
             {shortAddress(request.workerAddress, 8, 8)}
           </div>
 
-          <div className="mt-4 sm:mt-5 rounded-2xl bg-[#F8F7F2] border border-[#075E54]/10 py-4 sm:py-5 px-3 sm:px-4">
-            <div className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A] break-all">
-              {formatAmount(request.amount)}{" "}
-              <span className="text-xl font-bold text-[#075E54]">{request.currency}</span>
+          <div className="bo-panel-inset mt-6 px-4 py-6">
+            <div className="bo-display bo-num text-4xl text-ink">
+              {formatAmount(request.amount)}
             </div>
-            <div className="text-xs text-[#5F6F6D] font-medium mt-1 break-words">{request.description}</div>
+            <div className="bo-label mt-2 text-teal tracking-[0.2em]">
+              {request.currency}
+            </div>
+            <p className="mt-4 break-words text-xs leading-relaxed text-ink-2">
+              {request.description}
+            </p>
           </div>
         </div>
 
-        {/* Breakdown Items */}
-        <div className="py-4 sm:py-5 space-y-2.5 text-xs border-b border-slate-100">
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[#5F6F6D] shrink-0">Payment Memo ID:</span>
-            <span className="font-mono font-bold text-[#075E54] truncate">{request.memo}</span>
+        {/* Ledger parameters */}
+        <dl className="divide-y divide-line-1 border-b border-line-2">
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="bo-label-sm">Memo ID</dt>
+            <dd className="bo-code truncate text-xs text-teal">{request.memo}</dd>
           </div>
           {request.customerName && (
-            <div className="flex justify-between items-center gap-2">
-              <span className="text-[#5F6F6D] shrink-0">Billed To:</span>
-              <span className="font-semibold text-[#102A2A] truncate">{request.customerName}</span>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="bo-label-sm">Billed to</dt>
+              <dd className="truncate text-xs text-ink">{request.customerName}</dd>
             </div>
           )}
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[#5F6F6D] shrink-0">Payment Network:</span>
-            <span className="font-medium text-[#102A2A]">Stellar Testnet</span>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="bo-label-sm">Network</dt>
+            <dd className="text-xs text-ink">Stellar Testnet</dd>
           </div>
-          <div className="flex justify-between items-center gap-2">
-            <span className="text-[#5F6F6D] shrink-0">Custody:</span>
-            <span className="font-bold text-[#075E54]">100% Non-Custodial Direct</span>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="bo-label-sm">Custody</dt>
+            <dd className="flex items-center gap-2 text-xs text-teal">
+              <Mark accent />
+              Non-custodial direct
+            </dd>
           </div>
+        </dl>
+
+        {/* Status */}
+        <div aria-live="polite" aria-atomic="true">
+          {statusMessage && (
+            <div className="bo-note bo-note-info mt-5 flex items-center gap-3 p-3.5">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-aqua" aria-hidden="true" />
+              <span className="text-xs font-medium text-ink">{statusMessage}</span>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div
+              role="alert"
+              className="bo-note bo-note-error mt-5 flex items-start gap-3 p-3.5"
+            >
+              <AlertCircle
+                className="mt-0.5 h-4 w-4 shrink-0 text-coral"
+                aria-hidden="true"
+              />
+              <span className="text-xs leading-relaxed text-ink-2">{errorMessage}</span>
+            </div>
+          )}
         </div>
 
-        {/* Status / Error feedback */}
-        {statusMessage && (
-          <div className="mt-4 sm:mt-5 rounded-2xl border border-[#075E54]/20 bg-[#075E54]/5 p-3.5 flex items-center gap-2.5 text-xs text-[#075E54]">
-            <Loader2 className="h-4 w-4 animate-spin shrink-0 text-[#075E54]" />
-            <span className="font-semibold">{statusMessage}</span>
-          </div>
-        )}
-
-        {errorMessage && (
-          <div className="mt-4 sm:mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {/* Testnet Faucet Quick Action */}
+        {/* Faucet */}
         {isAuthenticated && user?.address && (
-          <div className="mt-4 rounded-2xl border border-[#F2A900]/30 bg-[#F2A900]/10 p-3.5 text-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="bo-note bo-note-warn mt-5 p-3.5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <span className="font-bold text-[#102A2A] block">Testing on Stellar Testnet?</span>
-                <span className="text-[11px] sm:text-2xs text-[#5F6F6D]">Get 10,000 free testnet XLM for this wallet</span>
+                <span className="bo-label-sm block text-gold">Testing on testnet?</span>
+                <span className="mt-1.5 block text-2xs text-ink-3">
+                  Get 10,000 free testnet XLM for this wallet
+                </span>
               </div>
               <button
                 type="button"
                 onClick={handleFundFriendbot}
                 disabled={funding}
-                className="w-full sm:w-auto shrink-0 min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#F2A900]/40 bg-white px-3.5 py-2 text-xs font-bold text-[#b37d00] shadow-2xs hover:bg-white/80 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                className="bo-btn bo-btn-gold shrink-0 px-3.5 py-2.5 text-2xs uppercase tracking-[0.12em]"
               >
                 {funding ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Funding...</span>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    <span>Funding</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-3.5 w-3.5 text-[#F2A900]" />
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>Get 10,000 XLM</span>
                   </>
                 )}
               </button>
             </div>
             {fundingMessage && (
-              <div className="mt-2.5 rounded-xl bg-white p-2.5 text-2xs font-semibold text-[#102A2A] border border-[#F2A900]/30">
+              <p aria-live="polite" className="mt-3 border-t border-line-1 pt-3 text-2xs text-ink-2">
                 {fundingMessage}
-              </div>
+              </p>
             )}
           </div>
         )}
 
-        {/* Action Button */}
-        <div className="mt-5 sm:mt-6 space-y-3">
+        {/* Action */}
+        <div className="mt-6">
           {isAuthenticated ? (
             <button
               type="button"
               onClick={handlePay}
               disabled={paying}
-              className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-5 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="bo-btn bo-btn-primary min-h-[52px] w-full px-5 py-4 text-sm uppercase tracking-[0.1em]"
             >
               {paying ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Processing Payment...</span>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Processing</span>
                 </>
               ) : (
                 <>
-                  <Wallet className="h-5 w-5 text-[#F2A900]" />
+                  <Wallet className="h-4 w-4" aria-hidden="true" />
                   <span>
-                    Pay {formatAmount(request.amount)} {request.currency} with Pollar
+                    Pay {formatAmount(request.amount)} {request.currency}
                   </span>
                 </>
               )}
@@ -441,16 +462,16 @@ function PaymentCheckoutContent({ requestId }: { requestId: string }) {
               type="button"
               onClick={openLoginModal}
               disabled={isAuthLoading}
-              className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-5 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg shadow-[#075E54]/25 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+              className="bo-btn bo-btn-primary min-h-[52px] w-full px-5 py-4 text-sm uppercase tracking-[0.1em]"
             >
-              <Wallet className="h-5 w-5 text-[#F2A900]" />
-              <span>Connect Pollar Wallet to Pay</span>
+              <Wallet className="h-4 w-4" aria-hidden="true" />
+              <span>Connect wallet to pay</span>
             </button>
           )}
 
-          <div className="flex items-center justify-center gap-1.5 text-2xs text-[#5F6F6D] pt-1 text-center">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#075E54] shrink-0" />
-            <span>Non-custodial settlement confirmed on Stellar Horizon</span>
+          <div className="mt-4 flex items-center justify-center gap-2 text-center">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-teal" aria-hidden="true" />
+            <span className="bo-label-sm">Settlement confirmed on Stellar Horizon</span>
           </div>
         </div>
       </div>
@@ -470,7 +491,7 @@ export default function PaymentCheckoutPage({
     <Suspense
       fallback={
         <div className="flex flex-1 items-center justify-center p-16">
-          <Loader2 className="h-8 w-8 animate-spin text-[#075E54]" />
+          <Loader2 className="h-6 w-6 animate-spin text-teal" aria-label="Loading" />
         </div>
       }
     >

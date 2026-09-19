@@ -5,12 +5,9 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { usePollarAuth } from "@/hooks/usePollarAuth";
 import { useBalance } from "@/hooks/useBalance";
-import {
-  savePaymentRequest,
-  PaymentRequest,
-  generateId,
-} from "@/lib/storage";
+import { savePaymentRequest, PaymentRequest, generateId } from "@/lib/storage";
 import { shortAddress, formatAmount } from "@/lib/stellar";
+import { Mark, Corners, Eyebrow } from "@/components/blackout";
 import {
   PlusCircle,
   Copy,
@@ -19,11 +16,9 @@ import {
   Receipt,
   QrCode,
   AlertCircle,
-  Sparkles,
   Share2,
-  CheckCircle2,
-  Send,
   Info,
+  ArrowRight,
 } from "lucide-react";
 
 export default function ReceivePaymentPage() {
@@ -122,267 +117,305 @@ export default function ReceivePaymentPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#075E54]/10 text-[#075E54] mb-6">
-          <Receipt className="h-8 w-8 text-[#075E54]" />
-        </div>
-        <h1 className="font-heading text-3xl font-black tracking-tight text-[#102A2A]">
-          Sign In to Create Payment Requests
+      <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <span className="flex h-12 w-12 items-center justify-center border border-line-2 bg-surface-2">
+          <Receipt className="h-5 w-5 text-teal" aria-hidden="true" />
+        </span>
+        <h1 className="bo-display mt-7 text-3xl text-ink">
+          Sign in to create payment requests
         </h1>
-        <p className="mt-3 text-sm text-[#5F6F6D] leading-relaxed">
-          Connect your Pollar wallet so incoming customer payments arrive directly into your non-custodial Stellar address.
+        <p className="mt-4 text-sm leading-relaxed text-ink-2">
+          Connect your Pollar wallet so incoming customer payments arrive directly in your
+          non-custodial Stellar address.
         </p>
         <button
           onClick={login}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#075E54] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all cursor-pointer"
+          className="bo-btn bo-btn-primary mt-8 px-6 py-3.5 text-xs uppercase tracking-[0.1em]"
         >
-          <Sparkles className="h-4 w-4 text-[#F2A900]" />
-          <span>Connect Pollar Wallet</span>
+          <span>Connect Pollar wallet</span>
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 w-full">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 text-xs font-bold text-[#075E54] uppercase tracking-wider mb-1.5">
-          <span className="h-2 w-2 rounded-full bg-[#16A085]" />
-          Dignified Invoicing
-        </div>
-        <h1 className="font-heading text-3xl sm:text-4xl font-black tracking-tight text-[#102A2A]">
+    <div className="bo-rails mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="border-b border-line-2 pb-8">
+        <Eyebrow live>Dignified invoicing</Eyebrow>
+        <h1 className="bo-display mt-5 text-3xl text-ink sm:text-4xl">
           Get paid for your work.
         </h1>
-        <p className="text-sm sm:text-base text-[#5F6F6D] mt-1.5 font-normal">
-          Create a clear payment request and send it to your customer. Once paid, a digital receipt is immediately issued.
+        <p className="mt-3 max-w-xl text-sm text-ink-2">
+          Create a clear payment request and send it to your customer. Once paid, a digital
+          receipt is issued immediately.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Form Column */}
+      <div className="mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+        {/* ============ FORM ============ */}
         <div className="lg:col-span-7">
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-3xl border border-[#075E54]/15 bg-white p-6 sm:p-8 shadow-sm space-y-5"
-          >
+          <form onSubmit={handleSubmit} className="bo-panel relative p-6 sm:p-8">
+            <Corners />
+
+            <div className="flex items-center gap-3">
+              <Mark accent />
+              <h2 className="bo-label text-ink">Request parameters</h2>
+              <span className="h-px flex-1 bg-line-1" aria-hidden="true" />
+            </div>
+
             {error && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-700 flex items-start gap-2.5">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
-                <span>{error}</span>
+              <div
+                role="alert"
+                className="bo-note bo-note-error mt-6 flex items-start gap-3 p-4"
+              >
+                <AlertCircle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-coral"
+                  aria-hidden="true"
+                />
+                <span className="text-xs leading-relaxed text-ink">{error}</span>
               </div>
             )}
 
-            {/* Recipient Wallet Display */}
-            <div className="rounded-2xl border border-[#075E54]/15 bg-[#F8F7F2] p-3.5 text-xs">
-              <span className="text-[#5F6F6D] block mb-0.5 font-medium">Your Pollar Receiving Wallet:</span>
-              <span className="font-mono font-bold text-[#102A2A]">
+            {/* Receiving wallet */}
+            <div className="bo-panel-inset mt-6 p-4">
+              <div className="bo-label-sm">Your Pollar receiving wallet</div>
+              <div className="bo-code mt-2 break-all text-xs text-ink">
                 {shortAddress(user?.address || "", 12, 10)}
-              </span>
+              </div>
             </div>
 
-            {/* Amount & Currency */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2 space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#102A2A]">
+            {/* Amount & currency */}
+            <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-5">
+              <div className="space-y-2.5 sm:col-span-3">
+                <label htmlFor="amount" className="bo-label block">
                   Amount
                 </label>
                 <input
+                  id="amount"
                   type="number"
+                  inputMode="decimal"
                   step="any"
                   min="0.01"
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="50.00"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-base font-bold text-[#102A2A] focus:border-[#075E54] focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
+                  className="bo-field bo-field-num py-3.5 text-lg font-medium"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#102A2A]">
+              <div className="space-y-2.5 sm:col-span-2">
+                <span className="bo-label block" id="currency-label">
                   Currency
-                </label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value as "USDC" | "XLM")}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-[#102A2A] focus:border-[#075E54] focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all cursor-pointer"
+                </span>
+                <div
+                  className="bo-segment w-full"
+                  role="group"
+                  aria-labelledby="currency-label"
                 >
-                  <option value="USDC">USDC</option>
-                  <option value="XLM">XLM</option>
-                </select>
+                  {(["USDC", "XLM"] as const).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCurrency(c)}
+                      data-active={currency === c}
+                      aria-pressed={currency === c}
+                      className="flex-1 py-3.5!"
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* USDC Trustline Notice */}
+            {/* Trustline notice */}
             {currency === "USDC" && !hasUsdcTrustline && (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
-                <Info className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-                <div className="leading-relaxed">
-                  <span className="font-bold">Stellar Trustline Notice:</span> To receive USDC, your Stellar wallet must establish a USDC trustline. You can add it in 1 click from your{" "}
-                  <Link href="/profile" className="underline font-bold text-amber-950">
-                    Profile
+              <div className="bo-note bo-note-warn mt-5 flex items-start gap-3 p-4">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
+                <div className="text-xs leading-relaxed text-ink-2">
+                  <span className="font-medium text-gold">Trustline required.</span> To
+                  receive USDC your Stellar wallet must establish a USDC trustline. Add it
+                  in one click from your{" "}
+                  <Link href="/profile" className="font-medium text-teal underline">
+                    profile
                   </Link>
                   , or switch this request to{" "}
                   <button
                     type="button"
                     onClick={() => setCurrency("XLM")}
-                    className="underline font-bold text-amber-950 cursor-pointer"
+                    className="cursor-pointer font-medium text-teal underline"
                   >
                     XLM
-                  </button>{" "}
-                  (which requires no trustline).
+                  </button>
+                  , which needs no trustline.
                 </div>
               </div>
             )}
 
             {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#102A2A]">
-                Description / Service
+            <div className="mt-6 space-y-2.5">
+              <label htmlFor="description" className="bo-label block">
+                Description / service
               </label>
               <input
+                id="description"
                 type="text"
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Website Development, Tailored Kaftan, Photography"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-[#102A2A] focus:border-[#075E54] focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
+                placeholder="Website development, tailored kaftan, photography"
+                aria-describedby="description-hint"
+                className="bo-field"
               />
-              <span className="text-[11px] text-[#5F6F6D] block">
-                This appears on your customer's checkout screen and digital proof of income.
-              </span>
+              <p id="description-hint" className="text-2xs leading-relaxed text-ink-3">
+                This appears on your customer&apos;s checkout screen and on the digital
+                proof of income.
+              </p>
             </div>
 
-            {/* Optional Customer Name */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#102A2A]">
-                Customer / Client Name <span className="text-[#5F6F6D] font-normal">(Optional)</span>
+            {/* Customer */}
+            <div className="mt-6 space-y-2.5">
+              <label htmlFor="customer" className="bo-label block">
+                Customer name{" "}
+                <span className="text-ink-4 normal-case tracking-normal">optional</span>
               </label>
               <input
+                id="customer"
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="e.g. Acme Studio or Kemi Adeleke"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-[#102A2A] focus:border-[#075E54] focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
+                placeholder="Acme Studio or Kemi Adeleke"
+                className="bo-field"
               />
             </div>
 
-            {/* Optional Reference */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#102A2A]">
-                Invoice Reference <span className="text-[#5F6F6D] font-normal">(Optional)</span>
+            {/* Reference */}
+            <div className="mt-6 space-y-2.5">
+              <label htmlFor="reference" className="bo-label block">
+                Invoice reference{" "}
+                <span className="text-ink-4 normal-case tracking-normal">optional</span>
               </label>
               <input
+                id="reference"
                 type="text"
                 value={paymentReference}
                 onChange={(e) => setPaymentReference(e.target.value)}
-                placeholder="e.g. INV-2026-001"
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-[#102A2A] focus:border-[#075E54] focus:outline-none focus:ring-2 focus:ring-[#075E54]/20 transition-all"
+                placeholder="INV-2026-001"
+                className="bo-field bo-code"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#075E54] px-6 py-4 text-base font-bold text-white shadow-lg shadow-[#075E54]/20 hover:bg-[#064e46] active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+              className="bo-btn bo-btn-primary mt-8 w-full px-6 py-4 text-sm uppercase tracking-[0.12em]"
             >
-              <PlusCircle className="h-5 w-5" />
-              <span>{isSubmitting ? "Generating Request..." : "Generate Payment Link"}</span>
+              <PlusCircle className="h-4 w-4" aria-hidden="true" />
+              <span>{isSubmitting ? "Generating" : "Generate payment link"}</span>
             </button>
           </form>
         </div>
 
-        {/* Generated Link & QR Column */}
-        <div className="lg:col-span-5">
+        {/* ============ OUTPUT ============ */}
+        <div className="lg:col-span-5 lg:sticky lg:top-24">
           {createdRequest ? (
-            <div className="rounded-3xl border border-[#075E54]/25 bg-white p-6 sm:p-7 shadow-xl space-y-6 animate-in zoom-in-95 duration-200">
-              <div className="flex items-center gap-2 text-[#075E54] font-black font-heading text-base">
-                <Sparkles className="h-5 w-5 text-[#F2A900]" />
-                <span>Payment Request Ready!</span>
+            <div className="bo-panel-live bo-enter relative p-6 sm:p-7">
+              <Corners accent />
+
+              <div className="flex items-center gap-3">
+                <span className="bo-pulse" aria-hidden="true" />
+                <h2 className="bo-label text-teal">Payment request ready</h2>
+                <span className="h-px flex-1 bg-line-1" aria-hidden="true" />
               </div>
 
-              {/* Action Buttons: WhatsApp & Copy */}
-              <div className="space-y-3">
+              {/* Share actions */}
+              <div className="mt-6 space-y-3">
                 <a
                   href={buildWhatsAppShareUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#16A085] px-4 py-3 text-sm font-bold text-white shadow-md shadow-[#16A085]/20 hover:bg-[#138d75] transition-all"
+                  className="bo-btn bo-btn-primary w-full px-4 py-3.5 text-xs uppercase tracking-[0.1em]"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
                   <span>Share via WhatsApp</span>
                 </a>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-stretch gap-px bg-line-2">
                   <input
                     readOnly
                     value={paymentPageUrl}
-                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-[#F8F7F2] px-3 py-2.5 font-mono text-xs text-[#102A2A] select-all focus:outline-none"
+                    aria-label="Payment link"
+                    className="bo-field bo-code min-w-0 flex-1 py-2.5 text-2xs"
                   />
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-[#075E54] text-white hover:bg-[#064e46] active:scale-95 transition-all cursor-pointer shadow-2xs"
-                    title="Copy Payment Link"
-                    aria-label="Copy Payment Link"
+                    className="bo-btn bo-btn-secondary w-11 shrink-0"
+                    title="Copy payment link"
+                    aria-label="Copy payment link"
                   >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? (
+                      <Check className="h-4 w-4 text-teal" aria-hidden="true" />
+                    ) : (
+                      <Copy className="h-4 w-4" aria-hidden="true" />
+                    )}
                   </button>
                 </div>
-                {copied && (
-                  <span className="text-xs text-[#075E54] font-semibold block text-center">
-                    ✓ Link copied to clipboard!
-                  </span>
-                )}
-              </div>
-
-              {/* QR Code */}
-              <div className="flex flex-col items-center justify-center p-5 bg-[#F8F7F2] rounded-2xl border border-[#075E54]/10">
-                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
-                  <QRCodeSVG value={paymentPageUrl} size={160} level="M" />
-                </div>
-                <span className="text-xs text-[#5F6F6D] font-medium mt-3 text-center">
-                  Point client camera here to pay with Pollar
+                <span aria-live="polite" className="block text-2xs text-teal">
+                  {copied ? "Link copied to clipboard" : ""}
                 </span>
               </div>
 
-              {/* Request Summary */}
-              <div className="space-y-2 text-xs border-t border-slate-100 pt-4">
-                <div className="flex justify-between">
-                  <span className="text-[#5F6F6D]">Amount:</span>
-                  <span className="font-heading font-black text-[#102A2A] text-sm">
-                    {formatAmount(createdRequest.amount)} {createdRequest.currency}
-                  </span>
+              {/* QR */}
+              <div className="bo-panel-inset mt-6 flex flex-col items-center p-6">
+                <div className="bg-white p-3">
+                  <QRCodeSVG value={paymentPageUrl} size={152} level="M" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5F6F6D]">Service:</span>
-                  <span className="text-[#102A2A] font-semibold">{createdRequest.description}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5F6F6D]">Stellar Memo:</span>
-                  <span className="font-mono text-[#075E54] font-bold">{createdRequest.memo}</span>
-                </div>
+                <span className="bo-label-sm mt-4 text-center">
+                  Point client camera here to pay
+                </span>
               </div>
 
-              <div className="pt-2">
-                <Link
-                  href={paymentPageUrl}
-                  target="_blank"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[#075E54]/30 bg-[#075E54]/5 px-4 py-3 text-sm font-bold text-[#075E54] hover:bg-[#075E54]/10 transition-all"
-                >
-                  <span>Preview Customer Checkout Screen</span>
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
-              </div>
+              {/* Summary */}
+              <dl className="mt-6 divide-y divide-line-1 border-t border-line-1">
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <dt className="bo-label-sm">Amount</dt>
+                  <dd className="bo-num text-sm font-medium text-ink">
+                    {formatAmount(createdRequest.amount)}{" "}
+                    <span className="text-teal">{createdRequest.currency}</span>
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <dt className="bo-label-sm">Service</dt>
+                  <dd className="min-w-0 truncate text-sm text-ink">
+                    {createdRequest.description}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <dt className="bo-label-sm">Stellar memo</dt>
+                  <dd className="bo-code text-sm text-teal">{createdRequest.memo}</dd>
+                </div>
+              </dl>
+
+              <Link
+                href={paymentPageUrl}
+                target="_blank"
+                className="bo-btn bo-btn-ghost mt-6 w-full px-4 py-3 text-xs uppercase tracking-[0.1em]"
+              >
+                <span>Preview checkout screen</span>
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
             </div>
           ) : (
-            <div className="rounded-3xl border-2 border-dashed border-[#075E54]/20 bg-white/60 p-10 text-center text-[#5F6F6D]">
-              <QrCode className="h-12 w-12 mx-auto text-[#075E54]/40 mb-3" />
-              <h3 className="font-heading text-base font-bold text-[#102A2A]">
-                Your payment link and QR code will appear here
+            <div className="relative border border-dashed border-line-2 bg-surface-1 p-12 text-center">
+              <QrCode className="mx-auto h-10 w-10 text-ink-4" aria-hidden="true" />
+              <h3 className="bo-heading mt-6 text-base font-medium text-ink">
+                Your payment link and QR code appear here
               </h3>
-              <p className="text-xs text-[#5F6F6D] mt-1.5 max-w-xs mx-auto leading-relaxed">
-                Fill in the details on the left and click &ldquo;Generate Payment Link&rdquo; to share with your client.
+              <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-ink-3">
+                Fill in the details and generate the link to share with your client.
               </p>
             </div>
           )}
